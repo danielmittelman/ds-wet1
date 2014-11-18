@@ -1,0 +1,42 @@
+Init done.
+AddVersion: SUCCESS
+AddVersion: FAILURE
+AddApplication: SUCCESS
+AddVersion: SUCCESS
+AddApplication: FAILURE
+AddApplication: SUCCESS
+Most downloaded app is: 101
+IncreaseDownloads: SUCCESS
+Rank	||	App
+1	||	102
+2	||	101
+and there are no more apps!
+RemoveApplication: SUCCESS
+Rank	||	App
+1	||	101
+and there are no more apps!
+Most downloaded app is: -1
+UpgradeApplication: SUCCESS
+Most downloaded app is: 101
+UpgradeApplication: FAILURE
+AddApplication: SUCCESS
+AddApplication: SUCCESS
+Rank	||	App
+1	||	101
+2	||	120
+3	||	105
+and there are no more apps!
+Rank	||	App
+1	||	105
+and there are no more apps!
+Rank	||	App
+1	||	101
+2	||	120
+and there are no more apps!
+UpdateDownloads: SUCCESS
+Rank	||	App
+1	||	120
+2	||	101
+3	||	105
+and there are no more apps!
+Quit done.
