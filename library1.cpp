@@ -31,12 +31,34 @@ StatusType AddVersion(void* DS, int versionCode) {
 
 /* TODO: Continue for all interface functions */
 
-StatusType AddApplication(void *DS, int appID, int versionCode, int downloadCount);
-StatusType RemoveApplication(void *DS, int appID);
-StatusType IncreaseDownloads(void *DS, int appID, int downloadIncrease);
-StatusType UpgradeApplication(void *DS, int appID);
-StatusType GetTopApp(void *DS, int versionCode, int *appID);
-StatusType GetAllAppsByDownloads(void *DS, int versionCode, int **apps, int *numOfApps);
-StatusType UpdateDownloads(void *DS, int groupBase, double multiplyFactor);
-void Quit(void** DS);
+StatusType AddApplication(void *DS, int appID, int versionCode, int downloadCount) {
+    return ((Statistics*)DS)->AddApplication(appID, versionCode, downloadCount);
+}
 
+StatusType RemoveApplication(void *DS, int appID) {
+    return ((Statistics*)DS)->RemoveApplication(appID);
+}
+
+StatusType IncreaseDownloads(void *DS, int appID, int downloadIncrease) {
+    return ((Statistics*)DS)->IncreaseDownloads(appID, downloadIncrease);
+}
+
+StatusType UpgradeApplication(void *DS, int appID) {
+    return ((Statistics*)DS)->UpgradeApplication(appID);
+}
+
+StatusType GetTopApp(void *DS, int versionCode, int *appID) {
+    return ((Statistics*)DS)->GetTopApp(appID, versionCode, appID);
+}
+
+StatusType GetAllAppsByDownloads(void *DS, int versionCode, int **apps, int *numOfApps) {
+    return ((Statistics*)DS)->GetAllAppsByDownloads(versionCode, apps, numOfApps);
+}
+
+StatusType UpdateDownloads(void *DS, int groupBase, int multiplyFactor) {
+    return ((Statistics*)DS)->UpdateDownloads(groupBase, multiplyFactor);
+}
+
+void Quit(void** DS) {
+    return ((Statistics*)DS)->Quit();
+}
