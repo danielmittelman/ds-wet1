@@ -129,7 +129,7 @@ StatusType GetAllAppsByDownloads(void *DS, int versionCode, int **apps, int *num
  *                INVALID_INPUT - If DS==NULL or if groupBase < 1 or if multiplyFactor <=0
  *                SUCCESS - Otherwise.
  */
-StatusType UpdateDownloads(void *DS, int groupBase, double multiplyFactor);
+StatusType UpdateDownloads(void *DS, int groupBase, int multiplyFactor);
 
 
 /* Description:   Quits and deletes the database.

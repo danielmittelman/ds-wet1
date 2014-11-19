@@ -19,6 +19,6 @@ AddApplication 120 5 15
 GetAllAppsByDownloads -1
 GetAllAppsByDownloads 4
 GetAllAppsByDownloads 5
-UpdateDownloads 5 3.4
+UpdateDownloads 5 4
 GetAllAppsByDownloads -1
 Quit

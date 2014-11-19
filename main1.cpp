@@ -359,8 +359,8 @@ static errorType OnGetAllAppsByDownloads(void* DS, const char* const command) {
 /***************************************************************************/
 static errorType OnUpdateDownloads(void* DS, const char* const command) {
 	int groupBase;
-	double multiplyFactor;
-	ValidateRead(sscanf(command, "%d %lf", &groupBase, &multiplyFactor), 2,
+	int multiplyFactor;
+	ValidateRead(sscanf(command, "%d %d", &groupBase, &multiplyFactor), 2,
 			"UpdateDownloads failed.\n");
 	StatusType res = UpdateDownloads(DS, groupBase, multiplyFactor);
 
