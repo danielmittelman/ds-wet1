@@ -14,9 +14,7 @@ class Statistics {
 public:
     Statistics();
 
-    ~Statistics() {
-        Quit();
-    }
+    ~Statistics();
 
     StatusType AddVersion(int versionCode);
 
@@ -35,6 +33,11 @@ public:
     StatusType UpdateDownloads(int groupBase, int multiplyFactor);
 
     void Quit();
+
+private:
+    DoubleLinkedList mOSVersions;
+    AVLTree mAppsById;
+    AVLTree mAppsByDownloadCount;
 };
 
 #endif    /* _234218_WET1_STATISTICS_H_ */
