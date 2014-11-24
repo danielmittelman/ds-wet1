@@ -32,8 +32,6 @@ public:
 
     StatusType UpdateDownloads(int groupBase, int multiplyFactor);
 
-    void Quit();
-
 private:
     DoubleLinkedList mOSVersions;
     AVLTree mAppsById;

@@ -16,7 +16,7 @@ Statistics::Statistics() {
 }
 
 Statistics::~Statistics() {
-    Quit();
+    // TODO
 }
 
 StatusType Statistics::AddVersion(int versionCode) {
@@ -24,7 +24,13 @@ StatusType Statistics::AddVersion(int versionCode) {
         // TODO
     } catch (const bad_alloc& e) {
         return ALLOCATION_ERROR;
+    } catch (const InvalidVersionCodeException& e) {
+        return INVALID_INPUT;
+    } catch (const VersionCodeNotLargerThanCurrentException& e) {
+        return FAILURE;
     }
+
+    return SUCCESS;
 }
 
 StatusType Statistics::AddApplication(int appID, int versionCode, int downloadCount) {
@@ -54,8 +60,3 @@ StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *n
 StatusType Statistics::UpdateDownloads(int groupBase, int multiplyFactor) {
     // TODO
 }
-
-void Statistics::Quit() {
-    // TODO
-}
-
