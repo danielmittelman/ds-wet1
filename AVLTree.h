@@ -8,11 +8,13 @@
 #define _234218_WET1_AVLTREE_H_
 
 #define IS_NULL(a) (a == NULL)
-#define IS_NULLPTR(a) (*a == NULL)
 #define MAX(a,b) (((a)>(b)) ? (a) : (b))
 #define ABS(a) (((a) < 0) ? (-1*(a)) : (a))
 
 #include <cstdlib>
+
+// TODO remove
+#include <iostream>
 
 
 template<typename KeyType, typename ValueType>
@@ -21,14 +23,18 @@ public:
 
 	typedef AVLTree<KeyType, ValueType> ThisType;
 
-    AVLTree();
-
-    AVLTree(KeyType& key, ValueType& data, ThisType root) : key(key), data(data), root(root) {
+    AVLTree(KeyType key, ValueType data) : key(key), data(data) {
+    	root = this;
     	right = NULL;
     	left = NULL;
     }
 
-    ~AVLTree();
+    AVLTree(KeyType key, ValueType data, ThisType* root) : key(key), data(data), root(root) {
+    	right = NULL;
+    	left = NULL;
+    }
+
+    //~AVLTree();
 
     ValueType* enumerateData() {
     	ValueType treeArray[getTreeSize()];
@@ -39,26 +45,17 @@ public:
     };
 
     ValueType* findDataByKey(KeyType& key) {
-    	AVLTree* keyNode = searchByKey(key, this, false);
+    	ThisType* keyNode = searchByKey(key, this);
     	return keyNode->data;
     }
 
-    int getTreeSize() const {
+    const int getTreeSize() {
     	return calculateTreeSize(0, this);
     }
 
-    void insert(KeyType& key, ValueType& data) {
-    	// Find the prospected parent node, if the key was actually found an exception will be thrown
-    	AVLTree* parent = searchByKey(this, key, true);
+    void insert(KeyType key, ValueType data) {
 
-    	// Insert the new node where it should be located
-    	if(parent->key < key) {
-    		parent->right = ThisType(key, data, root);
-    	} else {
-    		parent->left = ThisType(key, data, root);
-    	}
-
-    	// Do gilgulim
+    	// Use recursiveInsert to handle the insert and rotations
 
     }
 
@@ -92,34 +89,27 @@ private:
 
     /* Internal helper recursive functions */
 
+    void recursiveInsert(KeyType key, ValueType data, ThisType* currentNode) {
+
+    }
+
     // lookForParent means that if the value was not found, return a pointer to the node that would have
     // been its parent had it existed. Use for insertion or whatever
-    ThisType* searchByKey(KeyType& key, ThisType* startTree, bool lookForParent) {
-    	if(IS_NULL(key)) {
-    		// Throw exception that the value is null
-    	}
+    ThisType* searchByKey(KeyType key, ThisType* startTree) {
     	if(IS_NULL(startTree)) {
-    		if(lookForParent) {
-    			return startTree;
-    		} else {
     			// Throw exception that the value was not found
-    		}
     	}
 
     	// Yay!
     	if(startTree->key == key) {
-    		if(lookForParent) {
-    			// Oh no! We're trying to insert an item that was found! Throw an exception, you scallywag!
-    		} else {
         		return startTree;
-    		}
     	}
 
     	// If this node's key is not the key we're looking for, search recursively
     	if(startTree->key > key) {
-    		return searchByKey(key, startTree->left, false);
+    		return searchByKey(key, startTree->left);
     	} else {
-    		return searchByKey(key, startTree->right, false);
+    		return searchByKey(key, startTree->right);
     	}
     }
 
