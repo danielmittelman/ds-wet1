@@ -23,6 +23,11 @@ public:
 
     AVLTree();
 
+    AVLTree(KeyType& key, ValueType& data, ThisType root) : key(key), data(data), root(root) {
+    	right = NULL;
+    	left = NULL;
+    }
+
     ~AVLTree();
 
     ValueType* enumerateData() {
@@ -34,7 +39,7 @@ public:
     };
 
     ValueType* findDataByKey(KeyType& key) {
-    	AVLTree* keyNode = searchByKey(key, this);
+    	AVLTree* keyNode = searchByKey(key, this, false);
     	return keyNode->data;
     }
 
@@ -43,6 +48,17 @@ public:
     }
 
     void insert(KeyType& key, ValueType& data) {
+    	// Find the prospected parent node, if the key was actually found an exception will be thrown
+    	AVLTree* parent = searchByKey(this, key, true);
+
+    	// Insert the new node where it should be located
+    	if(parent->key < key) {
+    		parent->right = ThisType(key, data, root);
+    	} else {
+    		parent->left = ThisType(key, data, root);
+    	}
+
+    	// Do gilgulim
 
     }
 
@@ -70,29 +86,40 @@ private:
     	int rightHeight = (IS_NULL(right)) ? getNodeHeight() : right->getNodeHeight();
     	int leftHeight = (IS_NULL(left)) ? getNodeHeight() : left->getNodeHeight();
 
-    	return ABS(rightHeight - leftHeight);
+    	return leftHeight - rightHeight;
     }
 
 
     /* Internal helper recursive functions */
-    ThisType* searchByKey(KeyType& key, ThisType* startTree) {
+
+    // lookForParent means that if the value was not found, return a pointer to the node that would have
+    // been its parent had it existed. Use for insertion or whatever
+    ThisType* searchByKey(KeyType& key, ThisType* startTree, bool lookForParent) {
     	if(IS_NULL(key)) {
     		// Throw exception that the value is null
     	}
     	if(IS_NULL(startTree)) {
-    		// Throw exception that the value was not found
+    		if(lookForParent) {
+    			return startTree;
+    		} else {
+    			// Throw exception that the value was not found
+    		}
     	}
 
     	// Yay!
     	if(startTree->key == key) {
-    		return startTree;
+    		if(lookForParent) {
+    			// Oh no! We're trying to insert an item that was found! Throw an exception, you scallywag!
+    		} else {
+        		return startTree;
+    		}
     	}
 
     	// If this node's key is not the key we're looking for, search recursively
     	if(startTree->key > key) {
-    		return searchByKey(key, startTree->left);
+    		return searchByKey(key, startTree->left, false);
     	} else {
-    		return searchByKey(key, startTree->right);
+    		return searchByKey(key, startTree->right, false);
     	}
     }
 
@@ -103,11 +130,9 @@ private:
     	if(IS_NULL(currentNode)) {
     		// Throw exception that the value was not found
     	}
-
     	if(currentNode->key == key) {
     		// The user asked to get the root's parent. Throw exception as it's impossible
     	}
-
 
     	// If either one of the node's children is the requesting node, return this node
     	if((!(IS_NULL(currentNode->right)) && currentNode->right->key == key)
