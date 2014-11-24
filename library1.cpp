@@ -29,8 +29,6 @@ StatusType AddVersion(void* DS, int versionCode) {
     return ((Statistics*)DS)->AddVersion(versionCode);
 }
 
-/* TODO: Continue for all interface functions */
-
 StatusType AddApplication(void *DS, int appID, int versionCode, int downloadCount) {
     return ((Statistics*)DS)->AddApplication(appID, versionCode, downloadCount);
 }
