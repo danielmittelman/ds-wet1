@@ -14,7 +14,9 @@ class Statistics {
 public:
     Statistics();
 
-    ~Statistics();
+    ~Statistics() {
+        Quit();
+    }
 
     StatusType AddVersion(int versionCode);
 
@@ -31,6 +33,8 @@ public:
     StatusType GetAllAppsByDownloads(int versionCode, int **apps, int *numOfApps);
 
     StatusType UpdateDownloads(int groupBase, int multiplyFactor);
+
+    void Quit();
 };
 
 #endif    /* _234218_WET1_STATISTICS_H_ */

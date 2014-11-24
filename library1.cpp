@@ -58,5 +58,6 @@ StatusType UpdateDownloads(void *DS, int groupBase, int multiplyFactor) {
 }
 
 void Quit(void** DS) {
-    return ((Statistics*)DS)->Quit();
+    ((Statistics*)DS)->Quit();
+    *DS = NULL;
 }
