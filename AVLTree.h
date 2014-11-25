@@ -16,55 +16,86 @@
 // TODO remove
 #include <iostream>
 
+/**
+ * Interfaces for the tree comparators
+ */
 
-template<typename KeyType, typename ValueType>
+/**
+ * Use this interface to implement the search comparator (will be used to search for a node by a single value)
+ */
+template<typename SearchType, typename DataType>
+class AVLTreeSearchComparator {
+public:
+	/**
+	 * @return true if the search type argument is considered equal to the data type
+	 */
+	virtual bool equals (const SearchType&, const DataType&) const = 0;
+};
+
+/**
+ * Use this interface to implement the data comparator (will be used to sort the data in the tree)
+ */
+template<typename DataType>
+class AVLTreeDataComparator {
+public:
+	/**
+	 * @return 1 if A>B, 0 if A==b, -1 if A<B
+	 */
+	virtual int operator() (const DataType&, const DataType&) const = 0;
+};
+
+template<typename SearchType, typename DataType>
 class AVLTree {
 public:
 
-	typedef AVLTree<KeyType, ValueType> ThisType;
+	typedef AVLTree<SearchType, DataType> ThisType;
 
-    AVLTree(KeyType key, ValueType data) : key(key), data(data) {
+    AVLTree(DataType data, AVLTreeDataComparator* sortPred, AVLTreeSearchComparator* searchPred) :
+    		sortPred(sortPred), searchPred(searchPred), data(data) {
     	root = this;
     	right = NULL;
     	left = NULL;
     }
 
-    AVLTree(KeyType key, ValueType data, ThisType* root) : key(key), data(data), root(root) {
+    AVLTree(DataType data, AVLTreeDataComparator* sortPred, AVLTreeSearchComparator* searchPred) :
+    		sortPred(sortPred), searchPred(searchPred), data(data), root(root) {
     	right = NULL;
     	left = NULL;
     }
 
     //~AVLTree();
 
-    ValueType* enumerateData() {
-    	ValueType treeArray[getTreeSize()];
+    DataType* enumerateData() {
+    	DataType treeArray[getTreeSize()];
     	int beginIndex = 0;
 
     	doInOrderEnumeration(this, treeArray, beginIndex);
     	return treeArray;
     };
 
-    ValueType* findDataByKey(KeyType& key) {
-    	ThisType* keyNode = searchByKey(key, this);
-    	return keyNode->data;
-    }
+    /* Because we work with comparators, this function will only work when an ephemeral data type, containing
+     * only the search key in the correct field, is passed */
+
+    /*DataType* findDataByKey(DataType& keyData) {
+
+    }*/
 
     const int getTreeSize() {
     	return calculateTreeSize(0, this);
     }
 
-    void insert(KeyType key, ValueType data) {
-
+    void insert(DataType data) {
     	// Use recursiveInsert to handle the insert and rotations
 
     }
 
-    void remove(KeyType& key);
+    void remove(DataType data);
 
 
 private:
-    KeyType key;
-    ValueType data;
+    DataType data;
+    AVLTreeDataComparator* sortPred;
+    AVLTreeSearchComparator* searchPred;
     ThisType* left;
     ThisType* right;
     ThisType* root;
@@ -89,20 +120,20 @@ private:
 
     /* Internal helper recursive functions */
 
-    void recursiveInsert(KeyType key, ValueType data, ThisType* currentNode) {
+    void recursiveInsert(KeyType key, DataType data, ThisType* currentNode) {
 
     }
 
     // lookForParent means that if the value was not found, return a pointer to the node that would have
     // been its parent had it existed. Use for insertion or whatever
-    ThisType* searchByKey(KeyType key, ThisType* startTree) {
+    ThisType* searchByKey(SearchType key, ThisType* startTree) {
     	if(IS_NULL(startTree)) {
     			// Throw exception that the value was not found
     	}
 
     	// Yay!
-    	if(startTree->key == key) {
-        		return startTree;
+    	if(searchPred->equals(key, startTree->data)) {
+        	return startTree;
     	}
 
     	// If this node's key is not the key we're looking for, search recursively
@@ -113,7 +144,7 @@ private:
     	}
     }
 
-    ThisType* findNodeParent(KeyType& nodeKey, ThisType* currentNode) {
+    ThisType* findNodeParent(KeyType, ThisType* currentNode) {
     	if(IS_NULL(key)) {
     		// Throw exception that the value is null
     	}
@@ -163,7 +194,7 @@ private:
     	}
     }
 
-    void doInOrderEnumeration(ThisType* currentNode, ValueType* array, int* currentIndex) {
+    void doInOrderEnumeration(ThisType* currentNode, DataType* array, int* currentIndex) {
     	if(IS_NULL(currentNode) || IS_NULLPTR(currentNode)) {
     		return;
     	}
@@ -173,6 +204,5 @@ private:
     	doInOrderEnumeration(currentNode->right, array, currentIndex);
     }
 };
-
 
 #endif    /* _234218_WET1_AVLTREE_H_ */
