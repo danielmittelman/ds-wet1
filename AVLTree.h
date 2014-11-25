@@ -16,49 +16,25 @@
 // TODO remove
 #include <iostream>
 
-/**
- * Interfaces for the tree comparators
+
+/*
+ * KeyType and DataType both must override the =, <, > operators
+ * TODO Maybe create corresponding interfaces?
  */
 
-/**
- * Use this interface to implement the search comparator (will be used to search for a node by a single value)
- */
-template<typename SearchType, typename DataType>
-class AVLTreeSearchComparator {
-public:
-	/**
-	 * @return true if the search type argument is considered equal to the data type
-	 */
-	virtual bool equals (const SearchType&, const DataType&) const = 0;
-};
-
-/**
- * Use this interface to implement the data comparator (will be used to sort the data in the tree)
- */
-template<typename DataType>
-class AVLTreeDataComparator {
-public:
-	/**
-	 * @return 1 if A>B, 0 if A==b, -1 if A<B
-	 */
-	virtual int operator() (const DataType&, const DataType&) const = 0;
-};
-
-template<typename SearchType, typename DataType>
+template<typename KeyType, typename DataType>
 class AVLTree {
 public:
 
-	typedef AVLTree<SearchType, DataType> ThisType;
+	typedef AVLTree<KeyType, DataType> ThisType;
 
-    AVLTree(DataType data, AVLTreeDataComparator* sortPred, AVLTreeSearchComparator* searchPred) :
-    		sortPred(sortPred), searchPred(searchPred), data(data) {
+    AVLTree(KeyType key, DataType data) : key(key), data(data) {
     	root = this;
     	right = NULL;
     	left = NULL;
     }
 
-    AVLTree(DataType data, AVLTreeDataComparator* sortPred, AVLTreeSearchComparator* searchPred) :
-    		sortPred(sortPred), searchPred(searchPred), data(data), root(root) {
+    AVLTree(KeyType key, DataType data, ThisType* root) : key(key), data(data), root(root) {
     	right = NULL;
     	left = NULL;
     }
@@ -84,18 +60,18 @@ public:
     	return calculateTreeSize(0, this);
     }
 
-    void insert(DataType data) {
+    void insert(KeyType key, DataType data) {
+    	recursiveInsert(key, data, root);
     	// Use recursiveInsert to handle the insert and rotations
 
     }
 
-    void remove(DataType data);
+    void remove(KeyType key);
 
 
 private:
+    KeyType key;
     DataType data;
-    AVLTreeDataComparator* sortPred;
-    AVLTreeSearchComparator* searchPred;
     ThisType* left;
     ThisType* right;
     ThisType* root;
@@ -106,8 +82,12 @@ private:
     	return findNodeParent(key, root);
     }
 
+    int getTreeHeight() const {
+    	return calculateHeight(root);
+    }
+
     int getNodeHeight() const {
-    	return calculateNodeHeightDownwards(0, root);
+    	return calculateHeight(this);
     }
 
     int getNodeBalanceFactor() const {
@@ -118,25 +98,126 @@ private:
     }
 
 
+    /* Rotation functions */
+    ThisType* rrRotate(ThisType* parent) {
+    	if(IS_NULL(parent)) {
+    		// Throw exception MoFo
+    	}
+
+    	ThisType* tempNode;
+    	tempNode = parent->right;
+    	parent->right = tempNode->left;
+    	tempNode->left = parent;
+
+    	return tempNode;
+    }
+
+    ThisType* llRotate(ThisType* parent) {
+    	if(IS_NULL(parent)) {
+    		// Throw exception MoFo
+    	}
+
+    	ThisType* tempNode;
+    	tempNode = parent->left;
+    	parent->left = tempNode->right;
+    	tempNode->right = parent;
+
+    	return tempNode;
+    }
+
+    ThisType* rlRotate(ThisType* parent) {
+    	if(IS_NULL(parent)) {
+    		// Throw exception MoFo
+    	}
+
+    	ThisType* tempNode;
+    	tempNode = parent->right;
+    	parent->right = llRotate(tempNode);
+
+    	return rrRotate(parent);
+    }
+
+    ThisType* lrRotate(ThisType* parent) {
+    	if(IS_NULL(parent)) {
+    		// Throw exception MoFo
+    	}
+
+    	ThisType* tempNode;
+    	tempNode = parent->left;
+    	parent->left = rrRotate(tempNode);
+    	return llRotate(parent);
+    }
+
+
+    ThisType* balanceNode(ThisType* node) {
+    	int balanceFactor = node->getNodeBalanceFactor();
+
+    	/* Evaluate the balance factor and determine whether, and which,
+    	 * rotation is required to balance the tree */
+
+    	if(balanceFactor > 1) {
+    		if(node->left->getNodeBalanceFactor() > 0) {
+    			node = node->llRotate(node);
+    		} else {
+    			node = node->lrRotate(node);
+    		}
+    	} else if(balanceFactor < -1) {
+    		if(node->right->getNodeBalanceFactor() > 0) {
+    			node = rlRotate(node);
+    		} else {
+    			node = rrRotate(node);
+    		}
+    	}
+    }
+
+
     /* Internal helper recursive functions */
 
     void recursiveInsert(KeyType key, DataType data, ThisType* currentNode) {
+    	if(IS_NULL(currentNode)) {
+    		// Something's gone wrong, throw exception
+    		std::cout << "currentNode is null";
+    	}
 
+    	if(currentNode->key == key) {
+    		// This is not right, it's not supposed to be here! Throw exception
+    		std::cout << "Crap";
+    	}
+
+
+    	// Either insert the node or continue the recursion
+    	ThisType newNode = ThisType(key, data, root);
+    	if(currentNode->key < key) {
+    		if(IS_NULL(currentNode->right)) {
+    			currentNode->right = newNode;
+    			return;
+    		} else {
+    			recursiveInsert(key, data, currentNode->right);
+    		}
+    	} else {
+    		if(IS_NULL(currentNode->left)) {
+    			currentNode->left = newNode;
+    			return;
+    		} else {
+    			recursiveInsert(key, data, currentNode->left);
+    		}
+    	}
     }
 
     // lookForParent means that if the value was not found, return a pointer to the node that would have
     // been its parent had it existed. Use for insertion or whatever
-    ThisType* searchByKey(SearchType key, ThisType* startTree) {
+    ThisType* searchByKey(KeyType key, ThisType* startTree) {
     	if(IS_NULL(startTree)) {
     			// Throw exception that the value was not found
     	}
 
     	// Yay!
-    	if(searchPred->equals(key, startTree->data)) {
+    	if(key == startTree->key) {
         	return startTree;
     	}
 
     	// If this node's key is not the key we're looking for, search recursively
+
     	if(startTree->key > key) {
     		return searchByKey(key, startTree->left);
     	} else {
@@ -178,20 +259,16 @@ private:
     	return 1 + calculateTreeSize(0, currentNode->right) + calculateTreeSize(0, currentNode->left);
     }
 
-    int calculateNodeHeightDownwards(int height, ThisType* currentNode) {
-    	if(IS_NULL(key) || IS_NULL(currentNode)) {
-    		// Something's wrong here, throw exception
+    int calculateHeight(ThisType* node) {
+    	int height = 0;
+
+    	if(!IS_NULL(node)) {
+    		int leftHeight = calculateHeight(node->left);
+    		int rightHeight = calculateHeight(node->right);
+    		height = MAX(leftHeight, rightHeight) + 1;
     	}
 
-    	if(key == currentNode->key) {
-    		return 0;
-    	}
-
-    	if(currentNode->right->key < key) {
-    		return calculateNodeHeightDownwards(height + 1, currentNode->right);
-    	} else {
-    		return calculateNodeHeightDownwards(height + 1, currentNode->left);
-    	}
+    	return height;
     }
 
     void doInOrderEnumeration(ThisType* currentNode, DataType* array, int* currentIndex) {
