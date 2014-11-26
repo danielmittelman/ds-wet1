@@ -1,6 +1,7 @@
 #include "AVLTree.h"
 
 #include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -34,58 +35,175 @@ cout << "[OK]\n"; \
 #define ASSERT_NOT_NULL(expr) ASSERT_NOT_EQUALS(expr, NULL)
 
 
+/* The data type to be stored in the tree */
+struct CompoundData {
+public:
+	int id;
+	char letter;
+
+	CompoundData() { id = 0 ; letter = 0; };
+
+	CompoundData(int id, char letter) : id(id), letter(letter) {};
+};
+
+/* AVLTree implementation - A new class extending AVLTree with predetermined types that
+ * overrides the predicate methods. This class can then be used as a fully functional AVL tree */
+class TestTree : public AVLTree<int, CompoundData> {
+public:
+	virtual ~TestTree() {};
+
+private:
+	// Key-data comparison function. In this example, the key is considered equal to the data
+	// if the key field inside data is equal to key
+	virtual int predKeyData(int& key, CompoundData& data) const {
+		if(key > data.id) return 1;
+		if(key < data.id) return -1;
+
+		return 0;
+	}
+
+	// Data-data comparison function. In this example, the nodes are to be sorted
+	// by id, then by letter
+	virtual int predDataData(CompoundData& data, CompoundData& other) const {
+		if(data.id > other.id) return 1;
+		if(data.id < other.id) return -1;
+
+		if(data.id == other.id) {
+			if(data.letter > other.letter) return 1;
+			if(data.letter < other.letter) return -1;
+		}
+
+		return 0;
+	}
+};
+
+
+
+
 static bool testTreeCreation() {
-	AVLTree<int, int> tree = AVLTree<int, int>();
-	int dump[10];
+	// Create a new TestTree
+	TestTree tree = TestTree();
+	return true;
+}
 
+static bool testTreeInsertRemoveAndEnumeration() {
+	int vals[] = {9,2,5,1,7,6,3};
+	char chars[] = {'e','a','z','f','n','o','n'};
 
-	cout << "\nTree size: " << tree.getTreeSize() << endl;
-	int arrSize = tree.enumerateData(dump);
-	for(int i = 0 ; i < arrSize ; i++) {
-		cout << dump[i] << ", ";
+	// Create a tree and add some values
+	TestTree tree = TestTree();
+	for(int i = 0 ; i < 7 ; i++) {
+		ASSERT_EQUALS(tree.getTreeSize(), i);
+		CompoundData temp = CompoundData(vals[i], chars[i]);
+		tree.insert(temp);
+		ASSERT_EQUALS(tree.getTreeSize(), i+1);
 	}
-	tree.insert(9,9);
 
-	cout << "\nTree size: " << tree.getTreeSize() << endl;
-	arrSize = tree.enumerateData(dump);
+	// Enumerate the tree and print to screen
+	int arrSize = tree.getTreeSize();
+	CompoundData array[arrSize];
+	ASSERT_EQUALS(arrSize, tree.enumerateData(array));
+
 	for(int i = 0 ; i < arrSize ; i++) {
-		cout << dump[i] << ", ";
+		cout << array[i].letter;
 	}
-	tree.insert(2,2);
 
-	cout << "\nTree size: " << tree.getTreeSize() << endl;
-	arrSize = tree.enumerateData(dump);
-	for(int i = 0 ; i < arrSize ; i++) {
-		cout << dump[i] << ", ";
-	}
-	tree.insert(1,1);
+	// Delete elements
+	tree.remove(vals[0]);
+	tree.remove(vals[1]);
+	tree.remove(vals[5]);
 
-	cout << "\nTree size: " << tree.getTreeSize() << endl;
-	arrSize = tree.enumerateData(dump);
-	for(int i = 0 ; i < arrSize ; i++) {
-		cout << dump[i] << ", ";
-	}
-	tree.insert(0,0);
+	arrSize = tree.getTreeSize();
+	CompoundData array2[arrSize];
+	ASSERT_EQUALS(arrSize, tree.enumerateData(array2));
 
-	cout << "\nTree size: " << tree.getTreeSize() << endl;
-	arrSize = tree.enumerateData(dump);
 	for(int i = 0 ; i < arrSize ; i++) {
-		cout << dump[i] << ", ";
-	}
-	tree.insert(5,5);
-
-	cout << "\nTree size: " << tree.getTreeSize() << endl;
-	arrSize = tree.enumerateData(dump);
-	for(int i = 0 ; i < arrSize ; i++) {
-		cout << dump[i] << ", ";
+		cout << array2[i].letter;
 	}
 
 	return true;
+}
 
+static bool testTreeArrayFill() {
+	// First create a tree
+	int vals[] = {9,2,5,1,7,6,3};
+	char chars[] = {'e','a','z','f','n','o','n'};
+
+	TestTree tree = TestTree();
+	for(int i = 0 ; i < 7 ; i++) {
+		CompoundData temp = CompoundData(vals[i], chars[i]);
+		tree.insert(temp);
+	}
+
+	// Now create a sorted array with 7 elements
+	int vals2[] = {3,5,9,12,13,23,44};
+	char chars2[] = {'b','u','l','k','s','m','s'};
+	CompoundData arr[7];
+	for(int i = 0 ; i < 7 ; i++) {
+		arr[i] = CompoundData(vals2[i], chars2[i]);
+	}
+
+	tree.arrayFillTree(arr);
+
+	// Print the new tree
+	int arrSize = tree.getTreeSize();
+	CompoundData array[arrSize];
+	ASSERT_EQUALS(arrSize, tree.enumerateData(array));
+
+	for(int i = 0 ; i < arrSize ; i++) {
+		cout << array[i].letter;
+	}
+}
+
+static bool testTreeSearch() {
+	int vals[] = {9,2,5,1,7,6,3};
+	char chars[] = {'e','a','z','f','n','o','n'};
+
+	TestTree tree = TestTree();
+	for(int i = 0 ; i < 7 ; i++) {
+		CompoundData temp = CompoundData(vals[i], chars[i]);
+		tree.insert(temp);
+	}
+
+	CompoundData* ptr;
+	for(int i = 0 ; i < 7 ; i++) {
+		ptr = tree.findBySearchKey(vals[i]);
+		ASSERT_EQUALS(chars[i], ptr->letter);
+	}
+
+	try {
+		int badId = 123;
+		ptr = tree.findBySearchKey(badId);
+		ASSERT(false);
+	} catch(ElementNotFoundException& e) {
+		ASSERT(true);
+	}
+
+	return true;
+}
+
+static bool testTreeGetMax() {
+	int vals[] = {9,2,5,1,7,6,3};
+	char chars[] = {'e','a','z','f','n','o','n'};
+
+	TestTree tree = TestTree();
+	for(int i = 0 ; i < 7 ; i++) {
+		CompoundData temp = CompoundData(vals[i], chars[i]);
+		tree.insert(temp);
+	}
+
+	CompoundData* c = tree.getMax();
+	ASSERT_EQUALS(c->id, 9);
+	ASSERT_EQUALS(c->letter, 'e');
+	return true;
 }
 
 
 int main() {
 		RUN_TEST(testTreeCreation);
+		RUN_TEST(testTreeInsertRemoveAndEnumeration);
+		RUN_TEST(testTreeArrayFill);
+		RUN_TEST(testTreeSearch);
+		RUN_TEST(testTreeGetMax);
 		return 0;
 }

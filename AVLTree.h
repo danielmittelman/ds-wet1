@@ -7,9 +7,9 @@
 #ifndef _234218_WET1_AVLTREE_H_
 #define _234218_WET1_AVLTREE_H_
 
-#define IS_NULL(a) (a == NULL)
+#define IS_NULL(a) (a == 0)
+#define NULL_CHECK(a) if(IS_NULL(a)) throw NullArgumentException()
 #define MAX(a,b) (((a)>(b)) ? (a) : (b))
-#define ABS(a) (((a) < 0) ? (-1*(a)) : (a))
 
 #include <cstdlib>
 
@@ -17,39 +17,33 @@
 #include <iostream>
 
 
-/*
- * KeyType and DataType both must override the =, <, > operators
- * TODO Maybe create corresponding interfaces?
- */
+/* Exception classes */
+class AVLTreeException {};
+class NullArgumentException : public AVLTreeException {};
+class ElementNotFoundException : public AVLTreeException {};
 
-template<typename KeyType, typename DataType>
+
+template<typename SearchType, typename DataType>
 struct AVLNodeStruct {
-	KeyType key;
 	DataType data;
-	struct AVLNodeStruct<KeyType, DataType>* right;
-	struct AVLNodeStruct<KeyType, DataType>* left;
-	struct AVLNodeStruct<KeyType, DataType>* root;
+	struct AVLNodeStruct<SearchType, DataType>* right;
+	struct AVLNodeStruct<SearchType, DataType>* left;
+	struct AVLNodeStruct<SearchType, DataType>* root;
 
 	AVLNodeStruct() {
 		right = NULL;
 		left = NULL;
 		root = NULL;
 	}
-
-	/*AVLNodeStruct(KeyType key, DataType data, AVLNodeStruct<KeyType, DataType>* root) :
-			key(key), data(data), root(root) {
-		right = NULL;
-		left = NULL;
-	}*/
 };
 
 
-template<typename KeyType, typename DataType>
+template<typename SearchType, typename DataType>
 class AVLTree {
 public:
 
-	typedef AVLTree<KeyType, DataType> ThisType;
-	typedef AVLNodeStruct<KeyType, DataType> *AVLNode;
+	typedef AVLTree<SearchType, DataType> ThisType;
+	typedef AVLNodeStruct<SearchType, DataType> *AVLNode;
 
     AVLTree() {
     	root = NULL;
@@ -59,48 +53,70 @@ public:
     	this->root = root;
     }
 
-    //~AVLTree();
+    virtual ~AVLTree() {};
 
+	/* Returns 1 if key > data, -1 if key < data and 0 if both are considered equal */
+	virtual int predKeyData(SearchType& key, DataType& data) const = 0;
+
+	/* Returns 1 if data > other, -1 if data < other and 0 if both are equal */
+	virtual int predDataData(DataType& data, DataType& other) const = 0;
+
+	/* Adds a new data element to the tree */
+    void insert(DataType& data) {
+    	root = recursiveInsert(root, data);
+    }
+
+    /* Removes a data element from the tree */
+    void remove(SearchType& key) {
+    	root = recursiveRemove(root, key);
+    }
+
+    /* Dumps the tree into a sorted array */
     int enumerateData(DataType array[]) {
+    	NULL_CHECK(array);
     	int beginIndex = 0;
 
     	doInOrderEnumeration(root, array, &beginIndex);
     	return beginIndex;
     };
 
-    /* Because we work with comparators, this function will only work when an ephemeral data type, containing
-     * only the search key in the correct field, is passed */
+    /* Fills the tree with elements from a sorted array with identical size to the tree */
+    void arrayFillTree(DataType array[]) {
+    	NULL_CHECK(array);
+    	int beginIndex = 0;
 
-    /*DataType* findDataByKey(DataType& keyData) {
+    	doInOrderFill(root, array, &beginIndex);
+    };
 
-    }*/
+    /* Returns the data of an element with the provided key */
+    DataType* findBySearchKey(SearchType& key) {
+    	NULL_CHECK(key);
+    	return &(binarySearch(root, key)->data);
+    }
 
+    /* Returns the max data element in the tree */
+    DataType* getMax() {
+    	return &(findMax(root)->data);
+    }
+
+    /* Returns the tree's size, being the total number of nodes */
     const int getTreeSize() {
     	return calculateTreeSize(0, root);
     }
 
+    /* Returns the tree's height, being the length of the longest route from the root to a leaf */
     int getTreeHeight() const {
     	return calculateHeight(root);
     }
 
-    void insert(KeyType key, DataType data) {
-    	root = recursiveInsert(root, key, data);
-    	// Use recursiveInsert to handle the insert and rotations
-    }
-
-    void remove(KeyType key);
-
-
 private:
     AVLNode root;
 
-
     /* Internal helper functions */
-    /*ThisType* getNodeParent() {
-    	return findNodeParent(key, root);
-    }*/
 
     int getNodeBalanceFactor(AVLNode node) {
+    	//NULL_CHECK(node);
+
     	int rightHeight = calculateHeight(node->right);
     	int leftHeight = calculateHeight(node->left);
 
@@ -109,9 +125,7 @@ private:
 
     /* Rotation functions */
     AVLNode rrRotate(AVLNode parent) {
-    	if(IS_NULL(parent)) {
-    		// Throw exception MoFo
-    	}
+    	//NULL_CHECK(parent);
 
     	AVLNode tempNode;
     	tempNode = parent->right;
@@ -122,9 +136,7 @@ private:
     }
 
     AVLNode llRotate(AVLNode parent) {
-    	if(IS_NULL(parent)) {
-    		// Throw exception MoFo
-    	}
+    	//NULL_CHECK(parent);
 
     	AVLNode tempNode;
     	tempNode = parent->left;
@@ -135,9 +147,7 @@ private:
     }
 
     AVLNode rlRotate(AVLNode parent) {
-    	if(IS_NULL(parent)) {
-    		// Throw exception MoFo
-    	}
+    	//NULL_CHECK(parent);
 
     	AVLNode tempNode;
     	tempNode = parent->right;
@@ -147,9 +157,7 @@ private:
     }
 
     AVLNode lrRotate(AVLNode parent) {
-    	if(IS_NULL(parent)) {
-    		// Throw exception MoFo
-    	}
+    	//NULL_CHECK(parent);
 
     	AVLNode tempNode;
     	tempNode = parent->left;
@@ -160,6 +168,10 @@ private:
 
 
     AVLNode balanceNode(AVLNode node) {
+    	//NULL_CHECK(node);
+    	if(IS_NULL(node)) {
+    		return node;
+    	}
     	int balanceFactor = getNodeBalanceFactor(node);
 
     	/* Evaluate the balance factor and determine whether, and which,
@@ -186,67 +198,103 @@ private:
 
     /* Internal helper recursive functions */
 
-    AVLNode recursiveInsert(AVLNode node, KeyType key, DataType data) {
+    AVLNode recursiveInsert(AVLNode node, DataType& data) {
+    	// If node is null, the algorithm reached the insertion location. Create and return
     	if(IS_NULL(node)) {
-    		AVLNode newNode = new AVLNodeStruct<KeyType, DataType>();
+    		AVLNode newNode = new AVLNodeStruct<SearchType, DataType>();
     		newNode->data = data;
-    		newNode->key = key;
     		newNode->root = root;
     		return newNode;
-    	} else if(node->key > key) {
-    		node->left = recursiveInsert(node->left, key, data);
-    		return balanceNode(node);
+    	}
+    	// If the current node is considered greater than the data, continue on the left subtree
+    	else if(predDataData(data, node->data) < 0) {
+    		node->left = recursiveInsert(node->left, data);
+    	}
+    	// If the current node is considered lower than the data, continue on the right subtree
+    	else {
+    		node->right = recursiveInsert(node->right, data);
+    	}
+
+    	// Finally, balance the current node
+    	return balanceNode(node);
+    }
+
+    AVLNode recursiveRemove(AVLNode node, SearchType& searchKey) {
+    	if(IS_NULL(node)) {
+    		return NULL;
+    	}
+
+    	if(predKeyData(searchKey, node->data) > 0) {
+    		node->right = recursiveRemove(node->right, searchKey);
+    	} else if(predKeyData(searchKey, node->data) < 0) {
+    		node->left = recursiveRemove(node->left, searchKey);
     	} else {
-    		node->right = recursiveInsert(node->right, key, data);
-    		return balanceNode(node);
+    		// Split into 3 cases:
+    		if(IS_NULL(node->left) || IS_NULL(node->right)) {
+    			AVLNode child = node->right ? node->right : node->left;
+    			AVLNode temp;
+
+    			// Case 1: If the node has no children, delete it and release its pointer
+    			if(IS_NULL(child)) {
+    				temp = node;
+    				node = NULL;
+    				delete(temp);
+    			}
+    			// Case 2: If the node has a single child, replace the node
+    			// with the child and release the original child
+    			else {
+    				*node = *child;
+    				delete(child);
+    			}
+    		}
+    		// Case 3: If the node has two children, substitute it with the
+    		// next inorder node and delete the successor node
+    		else {
+    			// Find the next inorder node (find the left-most node in the right subtree)
+    			AVLNode nextNode = findNextInorder(node->right);
+
+    			// Substitute the nodes' data, preserving their children pointers
+    			DataType temp = nextNode->data;
+    			nextNode->data = node->data;
+    			node->data = temp;
+
+    			// Continue by running the algorithm on the right subtree and delete the replaced node.
+    			// The successor node will have either 0 or 1 (right) child.
+    			node->right = recursiveRemove(node->right, searchKey);
+    		}
+    	}
+
+    	// Finally, balance the current node
+    	return balanceNode(node);
+    }
+
+    AVLNode binarySearch(AVLNode node, SearchType& searchKey) {
+    	if(predKeyData(searchKey, node->data) == 0) {
+    		return node;
+    	}
+
+    	if(predKeyData(searchKey, node->data) > 0) {
+    		if(IS_NULL(node->right)) {
+    			throw ElementNotFoundException();
+    		} else {
+    			return binarySearch(node->right, searchKey);
+    		}
+    	} else {
+    		if(IS_NULL(node->left)) {
+    			throw ElementNotFoundException();
+    		} else {
+    			return binarySearch(node->left, searchKey);
+    		}
     	}
     }
 
-    // lookForParent means that if the value was not found, return a pointer to the node that would have
-    // been its parent had it existed. Use for insertion or whatever
-    /*ThisType* searchByKey(KeyType key, ThisType* startTree) {
-    	if(IS_NULL(startTree)) {
-    			// Throw exception that the value was not found
+    AVLNode findMax(AVLNode node) {
+    	if(!IS_NULL(node->right)) {
+    		return findMax(node->right);
     	}
 
-    	// Yay!
-    	if(key == startTree->key) {
-        	return startTree;
-    	}
-
-    	// If this node's key is not the key we're looking for, search recursively
-
-    	if(startTree->key > key) {
-    		return searchByKey(key, startTree->left);
-    	} else {
-    		return searchByKey(key, startTree->right);
-    	}
-    }*/
-
-    /*ThisType* findNodeParent(KeyType, ThisType* currentNode) {
-    	if(IS_NULL(key)) {
-    		// Throw exception that the value is null
-    	}
-    	if(IS_NULL(currentNode)) {
-    		// Throw exception that the value was not found
-    	}
-    	if(currentNode->key == key) {
-    		// The user asked to get the root's parent. Throw exception as it's impossible
-    	}
-
-    	// If either one of the node's children is the requesting node, return this node
-    	if((!(IS_NULL(currentNode->right)) && currentNode->right->key == key)
-    			|| (!(IS_NULL(currentNode->left)) && currentNode->left->key == key)) {
-    		return currentNode;
-    	}
-
-    	// Otherwise, use binary search to continue
-    	if(currentNode->key > key) {
-    		return findNodeParent(key, currentNode->left);
-    	} else {
-    		return findNodeParent(key, currentNode->right);
-    	}
-    }*/
+    	return node;
+    }
 
     int calculateTreeSize(int currentSize, AVLNode node) {
     	if(currentSize < 0 || IS_NULL(node)) {
@@ -279,6 +327,26 @@ private:
     	array[indexValue++] = node->data;
     	*currentIndex = indexValue;
     	doInOrderEnumeration(node->right, array, currentIndex);
+    }
+
+    void doInOrderFill(AVLNode node, DataType* array, int* currentIndex) {
+    	if(IS_NULL(node)) {
+    		return;
+    	}
+
+    	doInOrderFill(node->left, array, currentIndex);
+    	int indexValue = *currentIndex;
+    	node->data = array[indexValue++];
+    	*currentIndex = indexValue;
+    	doInOrderFill(node->right, array, currentIndex);
+    }
+
+    AVLNode findNextInorder(AVLNode node) {
+    	if(IS_NULL(node->left)) {
+    		return node;
+    	}
+
+    	return findNextInorder(node->left);
     }
 };
 
