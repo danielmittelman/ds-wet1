@@ -60,7 +60,7 @@ void OSVersionList::addApp(const AppData* appDataPtr) {
     }
 }
 
-void OSVersionList::removeApp(int appId, int versionCode) {
+void OSVersionList::removeApp(int versionCode, int appId) {
     // Search for the OSVersionData node with the relevant versionCode
     // (an exception will be thrown if it is not found)
     OSVersionsData* data = getAppDataByVersionCode(versionCode);
@@ -85,6 +85,36 @@ void OSVersionList::removeApp(int appId, int versionCode) {
     }
 }
 
+// Throws NoSuchVersionCodeException if is no such versionCode in the list,
+// or there is no versionCode in the list which is larger than the given one
+int OSVersionList::getFollowingVersion(int versionCode) const {
+    if (versionCode <= 0) {
+        throw InvalidVersionCodeException();
+    }
+
+    // Iterate over all nodes until one matches the version code
+    FilterByVersionCodePredicate predicate;
+
+    Node* p = mHead;
+    while (p) {
+        if (predicate(p->data, versionCode)) {
+            // Found it - Return the previous node's versionCode
+            if (p->prev) {
+                return p->prev->data->versionCode;
+            }
+
+            // The versionCode given is the largest one
+            throw NoSuchVersionCodeException();
+        }
+
+        p = p->next;
+    }
+
+    // Given versionCode is not in the list
+    throw NoSuchVersionCodeException()
+}
+
+
 OSVersionData* OSVersionList::getAppDataByVersionCode(int versionCode) {
     if (versionCode <= 0) {
         throw InvalidVersionCodeException();
@@ -100,7 +130,6 @@ OSVersionData* OSVersionList::getAppDataByVersionCode(int versionCode) {
 
     return data;
 }
-
 
 bool OSVersionList::FilterByVersionCodePredicate::operator()
         (const OSVersionsData& data, void* versionCode) const {

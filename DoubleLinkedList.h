@@ -9,8 +9,10 @@
 
 #include <cstdlib>                          // NULL definition
 #include <new>                              // bad_alloc definition
+#include <exception>
 
 using std::bad_alloc;
+using std::exception;
 
 
 template<typename ValueType>
@@ -106,7 +108,7 @@ public:
 
 
     // Exception classes
-    class NoSuchNodeException {};
+    class NoSuchNodeException {} : public exception;
 
 protected:
     struct Node {

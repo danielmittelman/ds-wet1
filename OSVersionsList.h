@@ -7,7 +7,10 @@
 #ifndef _234218_WET1_OSVERSIONS_LIST_H_
 #define _234218_WET1_OSVERSIONS_LIST_H_
 
+#include <exception>
 #include "DoubleLinkedList.h"
+
+using std::exception;
 
 
 struct OSVersionsData {
@@ -59,7 +62,7 @@ public:
     // Throws NoSuchVersionCodeException if is no such versionCode in the list
     // Throws AppAlreadyExistsException if the app already exists in the
     // version's versionAppsByDownloadCount tree
-    void addApp(const AppData& appdata);
+    void addApp(const AppData* appdata);
 
     // Removes an app from the data structue. Must receive the app's
     // versionCode because apps are indexed by versionCode
@@ -69,14 +72,24 @@ public:
     // Throws NoSuchVersionCodeException if is no such versionCode in the list
     // Throws NoSuchAppException if there are no apps with the given id in the
     // version's versionAppsByDownloadCount tree
-    void removeApp(int appId, int versionCode);
+    void removeApp(int versionCode, int appId);
+
+    // Finds a node with the given versionCode and returns the versionCode of
+    // the previous node in the list (the previous node since the list is
+    // sorted from highest to lowest versionCodes)
+    // Time complexity: O(k) where k is the list's length
+    // Throws InvalidVersionCodeException if the given versionCode is <= 0
+    // Throws NoSuchVersionCodeException if is no such versionCode in the list,
+    // or there is no versionCode in the list which is larger than the given one
+    int getFollowingVersion(int versionCode) const;
+
 
     // Exception classes
-    class InvalidVersionCodeException {};
-    class VersionCodeNotLargerThanCurrentException {};
-    class NoSuchVersionCodeException {};
-    class NoSuchAppException {};
-    class AppAlreadyExistsException {};
+    class InvalidVersionCodeException {} : public exception;
+    class VersionCodeNotLargerThanCurrentException {} : public exception;
+    class NoSuchVersionCodeException {} : public exception;
+    class NoSuchAppException {} : public exception;
+    class AppAlreadyExistsException {} : public exception;
 
 private:
     enum {

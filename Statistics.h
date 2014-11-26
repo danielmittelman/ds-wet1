@@ -24,15 +24,15 @@ public:
 
     StatusType AddVersion(int versionCode);
 
-    StatusType AddApplication(int appID, int versionCode, int downloadCount);
+    StatusType AddApplication(int appId, int versionCode, int downloadCount);
 
-    StatusType RemoveApplication(int appID);
+    StatusType RemoveApplication(int appId);
 
-    StatusType IncreaseDownloads(int appID, int downloadIncrease);
+    StatusType IncreaseDownloads(int appId, int downloadIncrease);
 
-    StatusType UpgradeApplication(int appID);
+    StatusType UpgradeApplication(int appId);
 
-    StatusType GetTopApp(int versionCode, int *appID);
+    StatusType GetTopApp(int versionCode, int *appId);
 
     StatusType GetAllAppsByDownloads(int versionCode, int **apps, int *numOfApps);
 

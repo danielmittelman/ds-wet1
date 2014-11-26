@@ -6,10 +6,12 @@
 
 #include <cstdlib>                          // NULL definition
 #include <new>                              // bad_alloc definition
+#include <exception>
 #include "Statistics.h"
 
 
 using std::bad_alloc;
+using std::exception;
 
 
 Statistics::Statistics() :
@@ -36,19 +38,14 @@ StatusType Statistics::AddVersion(int versionCode) {
     return SUCCESS;
 }
 
-StatusType Statistics::AddApplication(int appID, int versionCode, int downloadCount) {
-    // 1. Create a new AppData record with the app's params, and insert it
-    // into the apps list
-    AppData appData(appId, versionCode, downloadCount);
-    AppData* appDataPtr = NULL;
-
+StatusType Statistics::AddApplication(int appId, int versionCode, int downloadCount) {
     try {
+        // 1. Create a new AppData record with the app's params, and insert it
+        // into the apps list
+        AppData appData(appId, versionCode, downloadCount);
+        AppData* appDataPtr = NULL;
         appDataPtr = mAppsList.insertFront(appData);
-    } catch (const bad_alloc& e) {
-        return ALLOCATION_ERROR;
-    }
 
-    try {
         // 2. Insert a pointer to the new app to mOSVersions
         try {
             mOSVersions.addApp(appDataPtr);
@@ -62,6 +59,7 @@ StatusType Statistics::AddApplication(int appID, int versionCode, int downloadCo
 
         // 3. Insert new app to mAppsById and mAppsByDownloadCount
         mAppsById.addApp(appDataPtr);
+
         mAppsByDownloadCount.addApp(appDataPtr);
 
         // 4. Update mTopAppId and mTopAppDownloadCount if needed
@@ -83,19 +81,49 @@ StatusType Statistics::AddApplication(int appID, int versionCode, int downloadCo
     return SUCCESS;
 }
 
-StatusType Statistics::RemoveApplication(int appID) {
+StatusType Statistics::RemoveApplication(int appId) {
     // TODO
 }
 
-StatusType Statistics::IncreaseDownloads(int appID, int downloadIncrease) {
-    // TODO
+StatusType Statistics::IncreaseDownloads(int appId, int downloadIncrease) {
+    // Find the app's data using mAppsById
+    AppData* appData = mAppsById.getAppById(appId);
+
+    // Extract the app's current download count and calculate the new one
+    int oldDownloadCount = appData->downloadCount;
+    int newDownloadCount = oldDownloadCount += downloadIncrease;
+
+    // Update the mOSVersions data structure
+    mOSVersions.remove(appData->versionCode, appId);
+    mOSVersions.insert(appData);
+
+    // Update the mAppsByDownloadCount tree
+    mAppsByDownloadCount.remove(oldDownloadCount, appId);
+    mAppsByDownloadCount.insert(appData);
+
+    // Update the app's AppData structure
+    appData->downloadCount = newDownloadCount;
 }
 
-StatusType Statistics::UpgradeApplication(int appID) {
-    // TODO
+StatusType Statistics::UpgradeApplication(int appId) {
+    // Find the app's data using mAppsById
+    AppData* appData = mAppsById.getAppById(appId);
+
+    // Extract the app's current versionCode
+    int oldVersionCode = appData->downloadCount;
+
+    // Get the following versionCode in the mOSVersions
+    int newVersionCode = mOSVersions.getFollowingVersion(oldVersionCode);
+
+    // Remove old appData pointer from the old place in the mOSVersions tree
+    mOSVersions.remove(appData->oldVersionCode, appId);
+    // Update the AppData structure with the new version
+    appData->versionCode = newVersionCode;
+    // Re-insert the appData pointer to the new place in the mOSVersions tree
+    mOSVersions.insert(appData);
 }
 
-StatusType Statistics::GetTopApp(int versionCode, int *appID) {
+StatusType Statistics::GetTopApp(int versionCode, int *appId) {
     // TODO
 }
 
