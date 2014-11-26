@@ -13,8 +13,11 @@
 
 struct OSVersionsData {
     int versionCode;
-    // versionTopAppId will be INVALID_VERSION_TOP_APP if there are no apps
+    // versionTopAppId will be INVALID_VERSION_TOP_APP_ID if there are no apps
     int versionTopAppId;
+    // versionTopAppDownloadCount will be
+    // INVALID_VERSION_TOP_APP_DOWNLOAD_COUNT if there are no apps
+    int versionTopAppDownloadCount;
     AppsByDownloadCountTree versionAppsByDownloadCount;
 };
 
@@ -68,8 +71,15 @@ public:
 
 private:
     enum {
-        INVALID_VERSION_TOP_APP = -1;
+        INVALID_VERSION_TOP_APP_ID = -1;
+        INVALID_VERSION_TOP_APP_DOWNLOAD_COUNT = -1;
     };
+
+    // Helper function to get the OSVersionData of a specific versionCode
+    // Throws InvalidVersionCodeException if the given versionCode is <= 0
+    // Throws NoSuchVersionCodeException if is no such versionCode in the list
+    OSVersionData* getAppDataByVersionCode(int versionCode);
+
 
     // Predicate to be used with getDataByPredicate
     class FilterByVersionCodePredicate {

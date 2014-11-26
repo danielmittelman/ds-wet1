@@ -28,17 +28,9 @@ void OSVersionList::addVersion(int versionCode) {
 }
 
 int OSVersionList::getTopAppId(int versionCode) {
-    if (versionCode <= 0) {
-        throw InvalidVersionCodeException();
-    }
-
-    // Search for the node with the relevant versionCode
-    OSVersionsData* data;
-    try {
-        data = getDataByPredicate(FilterByVersionCodePredicate(), versionCode);
-    } catch (const NoSuchNodeException& e) {
-        throw NoSuchVersionCodeException();
-    }
+    // Search for the OSVersionData node with the relevant versionCode
+    // (an exception will be thrown if it is not found)
+    OSVersionsData* data = getAppDataByVersionCode(versionCode);
 
     // Found our node, return the top app if there is one
     if (data->versionTopAppId == INVALID_VERSION_TOP_APP) {
@@ -49,17 +41,9 @@ int OSVersionList::getTopAppId(int versionCode) {
 }
 
 void OSVersionList::addApp(int appId, int versionCode, int downloadCount) {
-    if (versionCode <= 0) {
-        throw InvalidVersionCodeException();
-    }
-
-    // Search for the node with the relevant versionCode
-    OSVersionsData* data;
-    try {
-        data = getDataByPredicate(FilterByVersionCodePredicate(), versionCode);
-    } catch (const NoSuchNodeException& e) {
-        throw NoSuchVersionCodeException();
-    }
+    // Search for the OSVersionData node with the relevant versionCode
+    // (an exception will be thrown if it is not found)
+    OSVersionsData* data = getAppDataByVersionCode(versionCode);
 
     // Found our node, add the app to the versionAppsByDownloadCount tree in it
     AppData appData(appId, versionCode, downloadCount);
@@ -71,20 +55,19 @@ void OSVersionList::addApp(int appId, int versionCode, int downloadCount) {
     } catch (const AppsByDownloadCountTree.KeyAlreadyExistsException& e) {
         throw AppAlreadyExistsException();
     }
+
+    // App was successfully added, don't forget to update versionTopAppId and
+    // versionTopAppDownloadCount if needed
+    if (data->versionTopAppDownloadCount < downloadCount) {
+        data->versionTopAppDownloadCount = downloadCount;
+        data->versionTopAppId = appId;
+    }
 }
 
 void OSVersionList::removeApp(int appId, int versionCode) {
-    if (versionCode <= 0) {
-        throw InvalidVersionCodeException();
-    }
-
-    // Search for the node with the relevant versionCode
-    OSVersionsData* data;
-    try {
-        data = getDataByPredicate(FilterByVersionCodePredicate(), versionCode);
-    } catch (const NoSuchNodeException& e) {
-        throw NoSuchVersionCodeException();
-    }
+    // Search for the OSVersionData node with the relevant versionCode
+    // (an exception will be thrown if it is not found)
+    OSVersionsData* data = getAppDataByVersionCode(versionCode);
 
     // Found our node, remove the app from the versionAppsByDownloadCount tree
     // in it
@@ -96,6 +79,26 @@ void OSVersionList::removeApp(int appId, int versionCode) {
     } catch (const AppsByDownloadCountTree.NoSuchKeyException& e) {
         throw NoSuchAppException();
     }
+
+    // App was successfully removed, don't forget to update
+    // versionTopAppId and versionTopAppDownloadCount if needed
+    updateTopApp(data);
+}
+
+OSVersionData* OSVersionList::getAppDataByVersionCode(int versionCode) {
+    if (versionCode <= 0) {
+        throw InvalidVersionCodeException();
+    }
+
+    // Search for the node with the relevant versionCode
+    OSVersionsData* data = NULL;
+    try {
+        data = getDataByPredicate(FilterByVersionCodePredicate(), versionCode);
+    } catch (const NoSuchNodeException& e) {
+        throw NoSuchVersionCodeException();
+    }
+
+    return data;
 }
 
 
