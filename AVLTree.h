@@ -7,9 +7,9 @@
 #ifndef _234218_WET1_AVLTREE_H_
 #define _234218_WET1_AVLTREE_H_
 
-#define IS_NULL(a) (a == NULL)
+#define IS_NULL(a) (a == 0)
+#define NULL_CHECK(a) if(IS_NULL(a)) throw NullArgumentException()
 #define MAX(a,b) (((a)>(b)) ? (a) : (b))
-#define ABS(a) (((a) < 0) ? (-1*(a)) : (a))
 
 #include <cstdlib>
 
@@ -17,39 +17,34 @@
 #include <iostream>
 
 
-/*
- * KeyType and DataType both must override the =, <, > operators
- * TODO Maybe create corresponding interfaces?
- */
 
-template<typename KeyType, typename DataType>
+/* Exception classes */
+class AVLTreeException {};
+class NullArgumentException : public AVLTreeException {};
+class ElementNotFoundException : public AVLTreeException {};
+
+
+template<typename SearchType, typename DataType>
 struct AVLNodeStruct {
-	KeyType key;
 	DataType data;
-	struct AVLNodeStruct<KeyType, DataType>* right;
-	struct AVLNodeStruct<KeyType, DataType>* left;
-	struct AVLNodeStruct<KeyType, DataType>* root;
+	struct AVLNodeStruct<SearchType, DataType>* right;
+	struct AVLNodeStruct<SearchType, DataType>* left;
+	struct AVLNodeStruct<SearchType, DataType>* root;
 
 	AVLNodeStruct() {
 		right = NULL;
 		left = NULL;
 		root = NULL;
 	}
-
-	/*AVLNodeStruct(KeyType key, DataType data, AVLNodeStruct<KeyType, DataType>* root) :
-			key(key), data(data), root(root) {
-		right = NULL;
-		left = NULL;
-	}*/
 };
 
 
-template<typename KeyType, typename DataType>
+template<typename SearchType, typename DataType>
 class AVLTree {
 public:
 
-	typedef AVLTree<KeyType, DataType> ThisType;
-	typedef AVLNodeStruct<KeyType, DataType> *AVLNode;
+	typedef AVLTree<SearchType, DataType> ThisType;
+	typedef AVLNodeStruct<SearchType, DataType> *AVLNode;
 
     AVLTree() {
     	root = NULL;
@@ -59,36 +54,48 @@ public:
     	this->root = root;
     }
 
-    //~AVLTree();
+    virtual ~AVLTree();
+
+	/* Returns true if the data and the search key are considered equal, false otherwise */
+	virtual bool predKeyData(SearchType& key, DataType& data) const = 0;
+
+	/* Returns 1 if data > other, -1 if data < other and 0 if both are equal */
+	virtual int predDataData(DataType& data, DataType& other) const = 0;
 
     int enumerateData(DataType array[]) {
+    	NULL_CHECK(array);
     	int beginIndex = 0;
 
     	doInOrderEnumeration(root, array, &beginIndex);
     	return beginIndex;
     };
 
-    /* Because we work with comparators, this function will only work when an ephemeral data type, containing
-     * only the search key in the correct field, is passed */
-
-    /*DataType* findDataByKey(DataType& keyData) {
-
-    }*/
-
     const int getTreeSize() {
     	return calculateTreeSize(0, root);
     }
+
+    DataType* getMax() const {};
 
     int getTreeHeight() const {
     	return calculateHeight(root);
     }
 
-    void insert(KeyType key, DataType data) {
-    	root = recursiveInsert(root, key, data);
-    	// Use recursiveInsert to handle the insert and rotations
+    DataType& findBySearchKey(SearchType& key) {
+    	NULL_CHECK(key);
+
+    	return binarySearch(root, key)->data;
     }
 
-    void remove(KeyType key);
+    void insert(DataType& data) {
+    	//NULL_CHECK(key);
+    	//NULL_CHECK(data);
+
+    	root = recursiveInsert(root, data);
+    }
+
+    void remove(SearchType& key) {
+    	//NULL_CHECK(key);
+    }
 
 
 private:
@@ -96,11 +103,10 @@ private:
 
 
     /* Internal helper functions */
-    /*ThisType* getNodeParent() {
-    	return findNodeParent(key, root);
-    }*/
 
     int getNodeBalanceFactor(AVLNode node) {
+    	//NULL_CHECK(node);
+
     	int rightHeight = calculateHeight(node->right);
     	int leftHeight = calculateHeight(node->left);
 
@@ -109,9 +115,7 @@ private:
 
     /* Rotation functions */
     AVLNode rrRotate(AVLNode parent) {
-    	if(IS_NULL(parent)) {
-    		// Throw exception MoFo
-    	}
+    	//NULL_CHECK(parent);
 
     	AVLNode tempNode;
     	tempNode = parent->right;
@@ -122,9 +126,7 @@ private:
     }
 
     AVLNode llRotate(AVLNode parent) {
-    	if(IS_NULL(parent)) {
-    		// Throw exception MoFo
-    	}
+    	//NULL_CHECK(parent);
 
     	AVLNode tempNode;
     	tempNode = parent->left;
@@ -135,9 +137,7 @@ private:
     }
 
     AVLNode rlRotate(AVLNode parent) {
-    	if(IS_NULL(parent)) {
-    		// Throw exception MoFo
-    	}
+    	//NULL_CHECK(parent);
 
     	AVLNode tempNode;
     	tempNode = parent->right;
@@ -147,9 +147,7 @@ private:
     }
 
     AVLNode lrRotate(AVLNode parent) {
-    	if(IS_NULL(parent)) {
-    		// Throw exception MoFo
-    	}
+    	//NULL_CHECK(parent);
 
     	AVLNode tempNode;
     	tempNode = parent->left;
@@ -160,6 +158,7 @@ private:
 
 
     AVLNode balanceNode(AVLNode node) {
+    	//NULL_CHECK(node);
     	int balanceFactor = getNodeBalanceFactor(node);
 
     	/* Evaluate the balance factor and determine whether, and which,
@@ -186,67 +185,46 @@ private:
 
     /* Internal helper recursive functions */
 
-    AVLNode recursiveInsert(AVLNode node, KeyType key, DataType data) {
+    AVLNode recursiveInsert(AVLNode node, DataType& data) {
+    	//NULL_CHECK(key);
+    	//NULL_CHECK(data);
+
     	if(IS_NULL(node)) {
-    		AVLNode newNode = new AVLNodeStruct<KeyType, DataType>();
+    		AVLNode newNode = new AVLNodeStruct<SearchType, DataType>();
     		newNode->data = data;
-    		newNode->key = key;
     		newNode->root = root;
     		return newNode;
-    	} else if(node->key > key) {
-    		node->left = recursiveInsert(node->left, key, data);
+    	} else if(predDataData(data, node->data)) {
+    		node->left = recursiveInsert(node->left, data);
     		return balanceNode(node);
     	} else {
-    		node->right = recursiveInsert(node->right, key, data);
+    		node->right = recursiveInsert(node->right, data);
     		return balanceNode(node);
     	}
     }
 
-    // lookForParent means that if the value was not found, return a pointer to the node that would have
-    // been its parent had it existed. Use for insertion or whatever
-    /*ThisType* searchByKey(KeyType key, ThisType* startTree) {
-    	if(IS_NULL(startTree)) {
-    			// Throw exception that the value was not found
+    AVLNode binarySearch(AVLNode node, SearchType& searchKey) {
+    	//NULL_CHECK(node);
+    	//NULL_CHECK(key);
+
+    	if(predKeyData(searchKey, node->data) == 0) {
+    		return node;
     	}
 
-    	// Yay!
-    	if(key == startTree->key) {
-        	return startTree;
-    	}
-
-    	// If this node's key is not the key we're looking for, search recursively
-
-    	if(startTree->key > key) {
-    		return searchByKey(key, startTree->left);
+    	if(predKeyData(searchKey, node->data) > 0) {
+    		if(IS_NULL(node->right)) {
+    			throw ElementNotFoundException();
+    		} else {
+    			return binarySearch(node->right, searchKey);
+    		}
     	} else {
-    		return searchByKey(key, startTree->right);
+    		if(IS_NULL(node->left)) {
+    			throw ElementNotFoundException();
+    		} else {
+    			return binarySearch(node->left, searchKey);
+    		}
     	}
-    }*/
-
-    /*ThisType* findNodeParent(KeyType, ThisType* currentNode) {
-    	if(IS_NULL(key)) {
-    		// Throw exception that the value is null
-    	}
-    	if(IS_NULL(currentNode)) {
-    		// Throw exception that the value was not found
-    	}
-    	if(currentNode->key == key) {
-    		// The user asked to get the root's parent. Throw exception as it's impossible
-    	}
-
-    	// If either one of the node's children is the requesting node, return this node
-    	if((!(IS_NULL(currentNode->right)) && currentNode->right->key == key)
-    			|| (!(IS_NULL(currentNode->left)) && currentNode->left->key == key)) {
-    		return currentNode;
-    	}
-
-    	// Otherwise, use binary search to continue
-    	if(currentNode->key > key) {
-    		return findNodeParent(key, currentNode->left);
-    	} else {
-    		return findNodeParent(key, currentNode->right);
-    	}
-    }*/
+    }
 
     int calculateTreeSize(int currentSize, AVLNode node) {
     	if(currentSize < 0 || IS_NULL(node)) {
