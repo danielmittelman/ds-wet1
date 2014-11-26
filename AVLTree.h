@@ -17,7 +17,6 @@
 #include <iostream>
 
 
-
 /* Exception classes */
 class AVLTreeException {};
 class NullArgumentException : public AVLTreeException {};
@@ -69,7 +68,7 @@ public:
 
     /* Removes a data element from the tree */
     void remove(SearchType& key) {
-    	//NULL_CHECK(key);
+    	root = recursiveRemove(root, key);
     }
 
     /* Dumps the tree into a sorted array */
@@ -82,7 +81,12 @@ public:
     };
 
     /* Fills the tree with elements from a sorted array with identical size to the tree */
-    void arrayFillTree(DataType array[]) {};
+    void arrayFillTree(DataType array[]) {
+    	NULL_CHECK(array);
+    	int beginIndex = 0;
+
+    	doInOrderFill(root, array, &beginIndex);
+    };
 
     /* Returns the data of an element with the provided key */
     DataType* findBySearchKey(SearchType& key) {
@@ -107,7 +111,6 @@ public:
 
 private:
     AVLNode root;
-
 
     /* Internal helper functions */
 
@@ -166,6 +169,9 @@ private:
 
     AVLNode balanceNode(AVLNode node) {
     	//NULL_CHECK(node);
+    	if(IS_NULL(node)) {
+    		return node;
+    	}
     	int balanceFactor = getNodeBalanceFactor(node);
 
     	/* Evaluate the balance factor and determine whether, and which,
@@ -193,27 +199,76 @@ private:
     /* Internal helper recursive functions */
 
     AVLNode recursiveInsert(AVLNode node, DataType& data) {
-    	//NULL_CHECK(key);
-    	//NULL_CHECK(data);
-
+    	// If node is null, the algorithm reached the insertion location. Create and return
     	if(IS_NULL(node)) {
     		AVLNode newNode = new AVLNodeStruct<SearchType, DataType>();
     		newNode->data = data;
     		newNode->root = root;
     		return newNode;
-    	} else if(predDataData(data, node->data) < 0) {
-    		node->left = recursiveInsert(node->left, data);
-    		return balanceNode(node);
-    	} else {
-    		node->right = recursiveInsert(node->right, data);
-    		return balanceNode(node);
     	}
+    	// If the current node is considered greater than the data, continue on the left subtree
+    	else if(predDataData(data, node->data) < 0) {
+    		node->left = recursiveInsert(node->left, data);
+    	}
+    	// If the current node is considered lower than the data, continue on the right subtree
+    	else {
+    		node->right = recursiveInsert(node->right, data);
+    	}
+
+    	// Finally, balance the current node
+    	return balanceNode(node);
+    }
+
+    AVLNode recursiveRemove(AVLNode node, SearchType& searchKey) {
+    	if(IS_NULL(node)) {
+    		return NULL;
+    	}
+
+    	if(predKeyData(searchKey, node->data) > 0) {
+    		node->right = recursiveRemove(node->right, searchKey);
+    	} else if(predKeyData(searchKey, node->data) < 0) {
+    		node->left = recursiveRemove(node->left, searchKey);
+    	} else {
+    		// Split into 3 cases:
+    		if(IS_NULL(node->left) || IS_NULL(node->right)) {
+    			AVLNode child = node->right ? node->right : node->left;
+    			AVLNode temp;
+
+    			// Case 1: If the node has no children, delete it and release its pointer
+    			if(IS_NULL(child)) {
+    				temp = node;
+    				node = NULL;
+    				delete(temp);
+    			}
+    			// Case 2: If the node has a single child, replace the node
+    			// with the child and release the original child
+    			else {
+    				*node = *child;
+    				delete(child);
+    			}
+    		}
+    		// Case 3: If the node has two children, substitute it with the
+    		// next inorder node and delete the successor node
+    		else {
+    			// Find the next inorder node (find the left-most node in the right subtree)
+    			AVLNode nextNode = findNextInorder(node->right);
+
+    			// Substitute the nodes' data, preserving their children pointers
+    			DataType temp = nextNode->data;
+    			nextNode->data = node->data;
+    			node->data = temp;
+
+    			// Continue by running the algorithm on the right subtree and delete the replaced node.
+    			// The successor node will have either 0 or 1 (right) child.
+    			node->right = recursiveRemove(node->right, searchKey);
+    		}
+    	}
+
+    	// Finally, balance the current node
+    	return balanceNode(node);
     }
 
     AVLNode binarySearch(AVLNode node, SearchType& searchKey) {
-    	//NULL_CHECK(node);
-    	//NULL_CHECK(key);
-
     	if(predKeyData(searchKey, node->data) == 0) {
     		return node;
     	}
@@ -272,6 +327,26 @@ private:
     	array[indexValue++] = node->data;
     	*currentIndex = indexValue;
     	doInOrderEnumeration(node->right, array, currentIndex);
+    }
+
+    void doInOrderFill(AVLNode node, DataType* array, int* currentIndex) {
+    	if(IS_NULL(node)) {
+    		return;
+    	}
+
+    	doInOrderFill(node->left, array, currentIndex);
+    	int indexValue = *currentIndex;
+    	node->data = array[indexValue++];
+    	*currentIndex = indexValue;
+    	doInOrderFill(node->right, array, currentIndex);
+    }
+
+    AVLNode findNextInorder(AVLNode node) {
+    	if(IS_NULL(node->left)) {
+    		return node;
+    	}
+
+    	return findNextInorder(node->left);
     }
 };
 

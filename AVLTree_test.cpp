@@ -86,10 +86,11 @@ static bool testTreeCreation() {
 	return true;
 }
 
-static bool testTreeInsertAndEnumeration() {
+static bool testTreeInsertRemoveAndEnumeration() {
 	int vals[] = {9,2,5,1,7,6,3};
 	char chars[] = {'e','a','z','f','n','o','n'};
 
+	// Create a tree and add some values
 	TestTree tree = TestTree();
 	for(int i = 0 ; i < 7 ; i++) {
 		ASSERT_EQUALS(tree.getTreeSize(), i);
@@ -98,6 +99,7 @@ static bool testTreeInsertAndEnumeration() {
 		ASSERT_EQUALS(tree.getTreeSize(), i+1);
 	}
 
+	// Enumerate the tree and print to screen
 	int arrSize = tree.getTreeSize();
 	CompoundData array[arrSize];
 	ASSERT_EQUALS(arrSize, tree.enumerateData(array));
@@ -106,7 +108,51 @@ static bool testTreeInsertAndEnumeration() {
 		cout << array[i].letter;
 	}
 
+	// Delete elements
+	tree.remove(vals[0]);
+	tree.remove(vals[1]);
+	tree.remove(vals[5]);
+
+	arrSize = tree.getTreeSize();
+	CompoundData array2[arrSize];
+	ASSERT_EQUALS(arrSize, tree.enumerateData(array2));
+
+	for(int i = 0 ; i < arrSize ; i++) {
+		cout << array2[i].letter;
+	}
+
 	return true;
+}
+
+static bool testTreeArrayFill() {
+	// First create a tree
+	int vals[] = {9,2,5,1,7,6,3};
+	char chars[] = {'e','a','z','f','n','o','n'};
+
+	TestTree tree = TestTree();
+	for(int i = 0 ; i < 7 ; i++) {
+		CompoundData temp = CompoundData(vals[i], chars[i]);
+		tree.insert(temp);
+	}
+
+	// Now create a sorted array with 7 elements
+	int vals2[] = {3,5,9,12,13,23,44};
+	char chars2[] = {'b','u','l','k','s','m','s'};
+	CompoundData arr[7];
+	for(int i = 0 ; i < 7 ; i++) {
+		arr[i] = CompoundData(vals2[i], chars2[i]);
+	}
+
+	tree.arrayFillTree(arr);
+
+	// Print the new tree
+	int arrSize = tree.getTreeSize();
+	CompoundData array[arrSize];
+	ASSERT_EQUALS(arrSize, tree.enumerateData(array));
+
+	for(int i = 0 ; i < arrSize ; i++) {
+		cout << array[i].letter;
+	}
 }
 
 static bool testTreeSearch() {
@@ -155,7 +201,8 @@ static bool testTreeGetMax() {
 
 int main() {
 		RUN_TEST(testTreeCreation);
-		RUN_TEST(testTreeInsertAndEnumeration);
+		RUN_TEST(testTreeInsertRemoveAndEnumeration);
+		RUN_TEST(testTreeArrayFill);
 		RUN_TEST(testTreeSearch);
 		RUN_TEST(testTreeGetMax);
 		return 0;
