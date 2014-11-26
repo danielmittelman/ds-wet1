@@ -7,6 +7,11 @@
 #ifndef _234218_WET1_DOUBLE_LINKED_LIST_H_
 #define _234218_WET1_DOUBLE_LINKED_LIST_H_
 
+#include <cstdlib>                          // NULL definition
+#include <new>                              // bad_alloc definition
+
+using std::bad_alloc;
+
 
 template<typename ValueType>
 class DoubleLinkedList {
@@ -20,16 +25,16 @@ public:
     virtual ~DoubleLinkedList() {
         // Free all nodes
         while (mHead) {
-            mHead = current->next;
             // Free data
-            delete current->data;
+            delete mHead->data;
             // Free the node struct itself
-            delete current;
-            current = mhead;
+            delete mHead;
+            mHead = mHead->next;
         }
     }
 
-    // Insert an element as the new first element
+    // Insert an element as the new first element. The given element is
+    // copied (using copy constructor) and the copy is placed in the list.
     // Time complexity: O(1)
     // Throws bad_alloc on allocation error
     virtual void insertFront(const ValueType& elem) {
@@ -83,11 +88,11 @@ public:
     // Time complexity: O(k) where k is the list's length
     // Throws NoSuchNodeException if no node matching the condition is found
     template<typename Condition>
-    virtual ValueType* getDataByPredicate(const Condition& condition,
+    ValueType* getDataByPredicate(const Condition& condition,
             void* extra) const {
 
         // Iterate over all nodes until one matches the condition
-        Node* p = head;
+        Node* p = mHead;
         while (p) {
             if (condition(p->data, extra)) {
                 // Found it !

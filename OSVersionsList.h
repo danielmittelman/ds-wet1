@@ -12,12 +12,22 @@
 
 struct OSVersionsData {
     int versionCode;
+    AppsByDownloadCountTree versionAppsByDownloadCount;
+
     // versionTopAppId will be INVALID_VERSION_TOP_APP_ID if there are no apps
     int versionTopAppId;
-    // versionTopAppDownloadCount will be
-    // INVALID_VERSION_TOP_APP_DOWNLOAD_COUNT if there are no apps
     int versionTopAppDownloadCount;
-    AppsByDownloadCountTree versionAppsByDownloadCount;
+
+    // Constructor for this struct, to make sure that the top app fields
+    // are initialized correctly
+    OSVersionsData(int versionCode) :
+            versionCode(versionCode),
+            versionAppsByDownloadCount(),
+            versionTopAppId(INVALID_VERSION_TOP_APP_ID),
+            // Initialize the top app download count to -1 so that every new
+            // app's download count will be larger than it
+            versionTopAppDownloadCount(-1) {}
+
 };
 
 class OSVersionsList: public DoubleLinkedList< OSVersionsData > {
@@ -49,7 +59,7 @@ public:
     // Throws NoSuchVersionCodeException if is no such versionCode in the list
     // Throws AppAlreadyExistsException if the app already exists in the
     // version's versionAppsByDownloadCount tree
-    void addApp(int appId, int versionCode, int downloadCount);
+    void addApp(const AppData& appdata);
 
     // Removes an app from the data structue. Must receive the app's
     // versionCode because apps are indexed by versionCode
@@ -71,7 +81,6 @@ public:
 private:
     enum {
         INVALID_VERSION_TOP_APP_ID = -1;
-        INVALID_VERSION_TOP_APP_DOWNLOAD_COUNT = -1;
     };
 
     // Helper function to get the OSVersionData of a specific versionCode

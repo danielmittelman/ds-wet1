@@ -8,6 +8,12 @@
 #define _234218_WET1_STATISTICS_H_
 
 #include "library1.h"
+#include "common.h"
+#include "OSVersionsList.h"
+
+
+// Define AppsList - A list of AppData
+typedef DoubleLinkedList<AppData> AppsList;
 
 
 class Statistics {
@@ -33,9 +39,18 @@ public:
     StatusType UpdateDownloads(int groupBase, int multiplyFactor);
 
 private:
-    DoubleLinkedList mOSVersions;
-    AVLTree mAppsById;
-    AVLTree mAppsByDownloadCount;
+    enum {
+        INVALID_TOP_APP_ID = -1;
+    };
+
+    AppsList mAppsList;
+    OSVersionsList mOSVersions;
+    AppsByIdTree mAppsById;
+    AppsByDownloadCountTree mAppsByDownloadCount;
+
+    // globalTopAppId will be INVALID_TOP_APP_ID if there are no apps
+    int mTopAppId;
+    int mTopAppDownloadCount;
 };
 
 #endif    /* _234218_WET1_STATISTICS_H_ */

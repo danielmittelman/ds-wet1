@@ -4,7 +4,9 @@
 /*                                                                          */
 /****************************************************************************/
 
+#include <cstdlib>                          // NULL definition
 #include "OSVersionsList.h"
+
 
 void OSVersionList::addVersion(int versionCode) {
     if (versionCode <= 0) {
@@ -17,13 +19,9 @@ void OSVersionList::addVersion(int versionCode) {
         throw VersionCodeNotLargerThanCurrentException();
     }
 
-    // OK the new versionCode is good, allocate a new struct with it and
+    // The new versionCode is good, allocate a new struct with it and
     // insert it into the list
-    OSVersionsData data;
-    data.versionCode = versionCode;
-    data.versionTopAppId = -1;
-    // data.versionAppsByDownloadCount is left empty for now
-
+    OSVersionsData data(versionCode);
     insertFront(data);
 }
 
@@ -40,27 +38,25 @@ int OSVersionList::getTopAppId(int versionCode) {
     return data->versionTopAppId;
 }
 
-void OSVersionList::addApp(int appId, int versionCode, int downloadCount) {
+void OSVersionList::addApp(const AppData* appDataPtr) {
     // Search for the OSVersionData node with the relevant versionCode
     // (an exception will be thrown if it is not found)
     OSVersionsData* data = getAppDataByVersionCode(versionCode);
 
     // Found our node, add the app to the versionAppsByDownloadCount tree in it
-    AppData appData(appId, versionCode, downloadCount);
     try {
-        // TODO: The insert function will probably change. In any case, we
-        // cannot just send downloadCount as the key because it needs to also
-        // consider the appId in case of collision
-        data->versionAppsByDownloadCount.insert(downloadCount, appData);
+        data->versionAppsByDownloadCount.insert(appDataPtr);
     } catch (const AppsByDownloadCountTree.KeyAlreadyExistsException& e) {
         throw AppAlreadyExistsException();
     }
 
     // App was successfully added, don't forget to update versionTopAppId and
     // versionTopAppDownloadCount if needed
-    if (data->versionTopAppDownloadCount < downloadCount) {
-        data->versionTopAppDownloadCount = downloadCount;
-        data->versionTopAppId = appId;
+    // NOTE: We could have recalculated the app maximum as in removeApp, but
+    // this is faster and simpler
+    if (data->versionTopAppDownloadCount < appDataPtr->downloadCount) {
+        data->versionTopAppDownloadCount = appDataPtr->downloadCount;
+        data->versionTopAppId = appDataPtr->appId;
     }
 }
 
@@ -75,7 +71,7 @@ void OSVersionList::removeApp(int appId, int versionCode) {
         // TODO: The remove function currently receives a key, if the way we
         // represent it doesn't change we need to use a key that contains
         // both the downloadCount and the appId (for collisions)
-        data->versionAppsByDownloadCount.remove(downloadCount);
+        data->versionAppsByDownloadCount.remove(appId);
     } catch (const AppsByDownloadCountTree.NoSuchKeyException& e) {
         throw NoSuchAppException();
     }
