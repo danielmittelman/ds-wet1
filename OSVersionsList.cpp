@@ -82,7 +82,11 @@ void OSVersionList::removeApp(int appId, int versionCode) {
 
     // App was successfully removed, don't forget to update
     // versionTopAppId and versionTopAppDownloadCount if needed
-    updateTopApp(data);
+    OSVersionsData* newTopApp = data->getMax();
+    if (data->versionTopAppDownloadCount < newTopApp->downloadCount) {
+        data->versionTopAppDownloadCount = newTopApp->downloadCount;
+        data->versionTopAppId = newTopApp->appId;
+    }
 }
 
 OSVersionData* OSVersionList::getAppDataByVersionCode(int versionCode) {

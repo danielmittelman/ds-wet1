@@ -7,8 +7,6 @@
 #ifndef _234218_WET1_DOUBLE_LINKED_LIST_H_
 #define _234218_WET1_DOUBLE_LINKED_LIST_H_
 
-#include "library1.h"
-
 
 template<typename ValueType>
 class DoubleLinkedList {
@@ -19,7 +17,7 @@ public:
 
     // Destructor
     // Time complexity: O(k) where k is the list's length
-    ~DoubleLinkedList() {
+    virtual ~DoubleLinkedList() {
         // Free all nodes
         while (mHead) {
             mHead = current->next;
@@ -34,7 +32,7 @@ public:
     // Insert an element as the new first element
     // Time complexity: O(1)
     // Throws bad_alloc on allocation error
-    void insertFront(const ValueType& elem) {
+    virtual void insertFront(const ValueType& elem) {
         // Allocate a new node
         Node* node = new Node;
 
@@ -57,7 +55,7 @@ public:
     // Get the first element
     // Time complexity: O(1)
     // Throws NoSuchNodeException
-    ValueType* getFront() const {
+    virtual ValueType* getFront() const {
         if (isEmpty()) {
             throw NoSuchNodeException();
         }
@@ -66,13 +64,13 @@ public:
 
     // Get the first element
     // Time complexity: O(1)
-    unsigned int getSize() const {
+    virtual unsigned int getSize() const {
         return mSize;
     }
 
     // Get the first element
     // Time complexity: O(1)
-    bool isEmpty() const {
+    virtual bool isEmpty() const {
         return (mSize == 0);
     }
 
@@ -85,7 +83,7 @@ public:
     // Time complexity: O(k) where k is the list's length
     // Throws NoSuchNodeException if no node matching the condition is found
     template<typename Condition>
-    ValueType* getDataByPredicate(const Condition& condition,
+    virtual ValueType* getDataByPredicate(const Condition& condition,
             void* extra) const {
 
         // Iterate over all nodes until one matches the condition
