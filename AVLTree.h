@@ -54,14 +54,25 @@ public:
     	this->root = root;
     }
 
-    virtual ~AVLTree();
+    virtual ~AVLTree() {};
 
-	/* Returns true if the data and the search key are considered equal, false otherwise */
-	virtual bool predKeyData(SearchType& key, DataType& data) const = 0;
+	/* Returns 1 if key > data, -1 if key < data and 0 if both are considered equal */
+	virtual int predKeyData(SearchType& key, DataType& data) const = 0;
 
 	/* Returns 1 if data > other, -1 if data < other and 0 if both are equal */
 	virtual int predDataData(DataType& data, DataType& other) const = 0;
 
+	/* Adds a new data element to the tree */
+    void insert(DataType& data) {
+    	root = recursiveInsert(root, data);
+    }
+
+    /* Removes a data element from the tree */
+    void remove(SearchType& key) {
+    	//NULL_CHECK(key);
+    }
+
+    /* Dumps the tree into a sorted array */
     int enumerateData(DataType array[]) {
     	NULL_CHECK(array);
     	int beginIndex = 0;
@@ -70,33 +81,29 @@ public:
     	return beginIndex;
     };
 
+    /* Fills the tree with elements from a sorted array with identical size to the tree */
+    void arrayFillTree(DataType array[]) {};
+
+    /* Returns the data of an element with the provided key */
+    DataType* findBySearchKey(SearchType& key) {
+    	NULL_CHECK(key);
+    	return &(binarySearch(root, key)->data);
+    }
+
+    /* Returns the max data element in the tree */
+    DataType* getMax() {
+    	return &(findMax(root)->data);
+    }
+
+    /* Returns the tree's size, being the total number of nodes */
     const int getTreeSize() {
     	return calculateTreeSize(0, root);
     }
 
-    DataType* getMax() const {};
-
+    /* Returns the tree's height, being the length of the longest route from the root to a leaf */
     int getTreeHeight() const {
     	return calculateHeight(root);
     }
-
-    DataType& findBySearchKey(SearchType& key) {
-    	NULL_CHECK(key);
-
-    	return binarySearch(root, key)->data;
-    }
-
-    void insert(DataType& data) {
-    	//NULL_CHECK(key);
-    	//NULL_CHECK(data);
-
-    	root = recursiveInsert(root, data);
-    }
-
-    void remove(SearchType& key) {
-    	//NULL_CHECK(key);
-    }
-
 
 private:
     AVLNode root;
@@ -194,7 +201,7 @@ private:
     		newNode->data = data;
     		newNode->root = root;
     		return newNode;
-    	} else if(predDataData(data, node->data)) {
+    	} else if(predDataData(data, node->data) < 0) {
     		node->left = recursiveInsert(node->left, data);
     		return balanceNode(node);
     	} else {
@@ -224,6 +231,14 @@ private:
     			return binarySearch(node->left, searchKey);
     		}
     	}
+    }
+
+    AVLNode findMax(AVLNode node) {
+    	if(!IS_NULL(node->right)) {
+    		return findMax(node->right);
+    	}
+
+    	return node;
     }
 
     int calculateTreeSize(int currentSize, AVLNode node) {
