@@ -8,122 +8,222 @@
 #define _234218_WET1_AVLTREE_H_
 
 #define IS_NULL(a) (a == NULL)
-#define IS_NULLPTR(a) (*a == NULL)
 #define MAX(a,b) (((a)>(b)) ? (a) : (b))
 #define ABS(a) (((a) < 0) ? (-1*(a)) : (a))
 
 #include <cstdlib>
 
+// TODO remove
+#include <iostream>
 
-template<typename KeyType, typename ValueType>
+
+/*
+ * KeyType and DataType both must override the =, <, > operators
+ * TODO Maybe create corresponding interfaces?
+ */
+
+template<typename KeyType, typename DataType>
+struct AVLNodeStruct {
+	KeyType key;
+	DataType data;
+	struct AVLNodeStruct<KeyType, DataType>* right;
+	struct AVLNodeStruct<KeyType, DataType>* left;
+	struct AVLNodeStruct<KeyType, DataType>* root;
+
+	AVLNodeStruct() {
+		right = NULL;
+		left = NULL;
+		root = NULL;
+	}
+
+	/*AVLNodeStruct(KeyType key, DataType data, AVLNodeStruct<KeyType, DataType>* root) :
+			key(key), data(data), root(root) {
+		right = NULL;
+		left = NULL;
+	}*/
+};
+
+
+template<typename KeyType, typename DataType>
 class AVLTree {
 public:
 
-	typedef AVLTree<KeyType, ValueType> ThisType;
+	typedef AVLTree<KeyType, DataType> ThisType;
+	typedef AVLNodeStruct<KeyType, DataType> *AVLNode;
 
-    AVLTree();
-
-    AVLTree(KeyType& key, ValueType& data, ThisType root) : key(key), data(data), root(root) {
-    	right = NULL;
-    	left = NULL;
+    AVLTree() {
+    	root = NULL;
     }
 
-    ~AVLTree();
+    AVLTree(AVLNode root) {
+    	this->root = root;
+    }
 
-    ValueType* enumerateData() {
-    	ValueType treeArray[getTreeSize()];
+    //~AVLTree();
+
+    int enumerateData(DataType array[]) {
     	int beginIndex = 0;
 
-    	doInOrderEnumeration(this, treeArray, beginIndex);
-    	return treeArray;
+    	doInOrderEnumeration(root, array, &beginIndex);
+    	return beginIndex;
     };
 
-    ValueType* findDataByKey(KeyType& key) {
-    	AVLTree* keyNode = searchByKey(key, this, false);
-    	return keyNode->data;
+    /* Because we work with comparators, this function will only work when an ephemeral data type, containing
+     * only the search key in the correct field, is passed */
+
+    /*DataType* findDataByKey(DataType& keyData) {
+
+    }*/
+
+    const int getTreeSize() {
+    	return calculateTreeSize(0, root);
     }
 
-    int getTreeSize() const {
-    	return calculateTreeSize(0, this);
+    int getTreeHeight() const {
+    	return calculateHeight(root);
     }
 
-    void insert(KeyType& key, ValueType& data) {
-    	// Find the prospected parent node, if the key was actually found an exception will be thrown
-    	AVLTree* parent = searchByKey(this, key, true);
-
-    	// Insert the new node where it should be located
-    	if(parent->key < key) {
-    		parent->right = ThisType(key, data, root);
-    	} else {
-    		parent->left = ThisType(key, data, root);
-    	}
-
-    	// Do gilgulim
-
+    void insert(KeyType key, DataType data) {
+    	root = recursiveInsert(root, key, data);
+    	// Use recursiveInsert to handle the insert and rotations
     }
 
-    void remove(KeyType& key);
+    void remove(KeyType key);
 
 
 private:
-    KeyType key;
-    ValueType data;
-    ThisType* left;
-    ThisType* right;
-    ThisType* root;
+    AVLNode root;
 
 
     /* Internal helper functions */
-    ThisType* getNodeParent() {
+    /*ThisType* getNodeParent() {
     	return findNodeParent(key, root);
-    }
+    }*/
 
-    int getNodeHeight() const {
-    	return calculateNodeHeightDownwards(0, root);
-    }
-
-    int getNodeBalanceFactor() const {
-    	int rightHeight = (IS_NULL(right)) ? getNodeHeight() : right->getNodeHeight();
-    	int leftHeight = (IS_NULL(left)) ? getNodeHeight() : left->getNodeHeight();
+    int getNodeBalanceFactor(AVLNode node) {
+    	int rightHeight = calculateHeight(node->right);
+    	int leftHeight = calculateHeight(node->left);
 
     	return leftHeight - rightHeight;
+    }
+
+    /* Rotation functions */
+    AVLNode rrRotate(AVLNode parent) {
+    	if(IS_NULL(parent)) {
+    		// Throw exception MoFo
+    	}
+
+    	AVLNode tempNode;
+    	tempNode = parent->right;
+    	parent->right = tempNode->left;
+    	tempNode->left = parent;
+
+    	return tempNode;
+    }
+
+    AVLNode llRotate(AVLNode parent) {
+    	if(IS_NULL(parent)) {
+    		// Throw exception MoFo
+    	}
+
+    	AVLNode tempNode;
+    	tempNode = parent->left;
+    	parent->left = tempNode->right;
+    	tempNode->right = parent;
+
+    	return tempNode;
+    }
+
+    AVLNode rlRotate(AVLNode parent) {
+    	if(IS_NULL(parent)) {
+    		// Throw exception MoFo
+    	}
+
+    	AVLNode tempNode;
+    	tempNode = parent->right;
+    	parent->right = llRotate(tempNode);
+
+    	return rrRotate(parent);
+    }
+
+    AVLNode lrRotate(AVLNode parent) {
+    	if(IS_NULL(parent)) {
+    		// Throw exception MoFo
+    	}
+
+    	AVLNode tempNode;
+    	tempNode = parent->left;
+    	parent->left = rrRotate(tempNode);
+
+    	return llRotate(parent);
+    }
+
+
+    AVLNode balanceNode(AVLNode node) {
+    	int balanceFactor = getNodeBalanceFactor(node);
+
+    	/* Evaluate the balance factor and determine whether, and which,
+    	 * rotation is required to balance the tree */
+
+    	AVLNode balancedNode = node;
+    	if(balanceFactor > 1) {
+    		if(getNodeBalanceFactor(node->left) > 0) {
+    			balancedNode = llRotate(node);
+    		} else {
+    			balancedNode = lrRotate(node);
+    		}
+    	} else if(balanceFactor < -1) {
+    		if(getNodeBalanceFactor(node->right) > 0) {
+    			balancedNode = rlRotate(node);
+    		} else {
+    			balancedNode = rrRotate(node);
+    		}
+    	}
+
+    	return balancedNode;
     }
 
 
     /* Internal helper recursive functions */
 
-    // lookForParent means that if the value was not found, return a pointer to the node that would have
-    // been its parent had it existed. Use for insertion or whatever
-    ThisType* searchByKey(KeyType& key, ThisType* startTree, bool lookForParent) {
-    	if(IS_NULL(key)) {
-    		// Throw exception that the value is null
-    	}
-    	if(IS_NULL(startTree)) {
-    		if(lookForParent) {
-    			return startTree;
-    		} else {
-    			// Throw exception that the value was not found
-    		}
-    	}
-
-    	// Yay!
-    	if(startTree->key == key) {
-    		if(lookForParent) {
-    			// Oh no! We're trying to insert an item that was found! Throw an exception, you scallywag!
-    		} else {
-        		return startTree;
-    		}
-    	}
-
-    	// If this node's key is not the key we're looking for, search recursively
-    	if(startTree->key > key) {
-    		return searchByKey(key, startTree->left, false);
+    AVLNode recursiveInsert(AVLNode node, KeyType key, DataType data) {
+    	if(IS_NULL(node)) {
+    		AVLNode newNode = new AVLNodeStruct<KeyType, DataType>();
+    		newNode->data = data;
+    		newNode->key = key;
+    		newNode->root = root;
+    		return newNode;
+    	} else if(node->key > key) {
+    		node->left = recursiveInsert(node->left, key, data);
+    		return balanceNode(node);
     	} else {
-    		return searchByKey(key, startTree->right, false);
+    		node->right = recursiveInsert(node->right, key, data);
+    		return balanceNode(node);
     	}
     }
 
-    ThisType* findNodeParent(KeyType& nodeKey, ThisType* currentNode) {
+    // lookForParent means that if the value was not found, return a pointer to the node that would have
+    // been its parent had it existed. Use for insertion or whatever
+    /*ThisType* searchByKey(KeyType key, ThisType* startTree) {
+    	if(IS_NULL(startTree)) {
+    			// Throw exception that the value was not found
+    	}
+
+    	// Yay!
+    	if(key == startTree->key) {
+        	return startTree;
+    	}
+
+    	// If this node's key is not the key we're looking for, search recursively
+
+    	if(startTree->key > key) {
+    		return searchByKey(key, startTree->left);
+    	} else {
+    		return searchByKey(key, startTree->right);
+    	}
+    }*/
+
+    /*ThisType* findNodeParent(KeyType, ThisType* currentNode) {
     	if(IS_NULL(key)) {
     		// Throw exception that the value is null
     	}
@@ -146,43 +246,40 @@ private:
     	} else {
     		return findNodeParent(key, currentNode->right);
     	}
-    }
+    }*/
 
-    int calculateTreeSize(int currentSize, ThisType* currentNode) {
-    	if(currentSize < 0 || IS_NULL(currentNode)) {
+    int calculateTreeSize(int currentSize, AVLNode node) {
+    	if(currentSize < 0 || IS_NULL(node)) {
     		return 0;
     	}
 
     	// The size of the tree consists of the size of the right tree, left tree and the current node
-    	return 1 + calculateTreeSize(0, currentNode->right) + calculateTreeSize(0, currentNode->left);
+    	return 1 + calculateTreeSize(0, node->right) + calculateTreeSize(0, node->left);
     }
 
-    int calculateNodeHeightDownwards(int height, ThisType* currentNode) {
-    	if(IS_NULL(key) || IS_NULL(currentNode)) {
-    		// Something's wrong here, throw exception
+    int calculateHeight(AVLNode node) {
+    	int height = 0;
+
+    	if(!IS_NULL(node)) {
+    		int leftHeight = calculateHeight(node->left);
+    		int rightHeight = calculateHeight(node->right);
+    		height = MAX(leftHeight, rightHeight) + 1;
     	}
 
-    	if(key == currentNode->key) {
-    		return 0;
-    	}
-
-    	if(currentNode->right->key < key) {
-    		return calculateNodeHeightDownwards(height + 1, currentNode->right);
-    	} else {
-    		return calculateNodeHeightDownwards(height + 1, currentNode->left);
-    	}
+    	return height;
     }
 
-    void doInOrderEnumeration(ThisType* currentNode, ValueType* array, int* currentIndex) {
-    	if(IS_NULL(currentNode) || IS_NULLPTR(currentNode)) {
+    void doInOrderEnumeration(AVLNode node, DataType* array, int* currentIndex) {
+    	if(IS_NULL(node)) {
     		return;
     	}
 
-    	doInOrderEnumeration(currentNode->left, array, currentIndex);
-    	array[currentIndex++] = currentNode->data;
-    	doInOrderEnumeration(currentNode->right, array, currentIndex);
+    	doInOrderEnumeration(node->left, array, currentIndex);
+    	int indexValue = *currentIndex;
+    	array[indexValue++] = node->data;
+    	*currentIndex = indexValue;
+    	doInOrderEnumeration(node->right, array, currentIndex);
     }
 };
-
 
 #endif    /* _234218_WET1_AVLTREE_H_ */
