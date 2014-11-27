@@ -87,41 +87,45 @@ StatusType Statistics::RemoveApplication(int appId) {
 }
 
 StatusType Statistics::IncreaseDownloads(int appId, int downloadIncrease) {
+    // TODO: Add try..catch and return statements in this function
+
     // Find the app's data using mAppsById
-    AppData* appData = mAppsById.getAppById(appId);
+    AppData** appData = mAppsById.getAppById(appId);
 
     // Extract the app's current download count and calculate the new one
-    int oldDownloadCount = appData->downloadCount;
+    int oldDownloadCount = (*appData)->downloadCount;
     int newDownloadCount = oldDownloadCount += downloadIncrease;
 
     // Update the mOSVersions data structure
-    mOSVersions.remove(appData->versionCode, appId);
-    mOSVersions.insert(appData);
+    mOSVersions.remove((*appData)->versionCode, appId);
+    mOSVersions.insert(*appData);
 
     // Update the mAppsByDownloadCount tree
     mAppsByDownloadCount.remove(oldDownloadCount, appId);
-    mAppsByDownloadCount.insert(appData);
+    mAppsByDownloadCount.insert(*appData);
 
     // Update the app's AppData structure
     appData->downloadCount = newDownloadCount;
 }
 
 StatusType Statistics::UpgradeApplication(int appId) {
+    // TODO: Add try..catch and return statements in this function
+
     // Find the app's data using mAppsById
-    AppData* appData = mAppsById.getAppById(appId);
+    AppData** appData = mAppsById.getAppById(appId);
 
     // Extract the app's current versionCode
-    int oldVersionCode = appData->downloadCount;
+    int oldVersionCode = (*appData)->downloadCount;
 
     // Get the following versionCode in the mOSVersions
     int newVersionCode = mOSVersions.getFollowingVersion(oldVersionCode);
 
     // Remove old appData pointer from the old place in tthe mOSVersions tree
-    mOSVersions.remove(appData->oldVersionCode, appId);
+    mOSVersions.remove((*appData)->oldVersionCode, appId);
     // Update the AppData structure with the new version
-    appData->versionCode = newVersionCode;
+    (*appData)->versionCode = newVersionCode;
     // Re-insert the appData pointer to the new place in the mOSVersions tree
-    mOSVersions.insert(appData);
+    mOSVersions.insert(*appData);
 }
 
 StatusType Statistics::GetTopApp(int versionCode, int *appId) {
