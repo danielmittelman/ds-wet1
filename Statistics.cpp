@@ -159,7 +159,79 @@ StatusType Statistics::GetTopApp(int versionCode, int *appId) {
 }
 
 StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *numOfApps) {
-    // TODO
+    if (apps == NULL || numOfApps == NULL) {
+        return INVALID_INPUT;
+    }
+
+    // Default values in case of error
+    *numOfApps = 0;
+    *app = NULL;
+
+    AppsByDownloadCountTree* tree;
+
+    if (versionCode < 0) {
+        // User wants all apps in the system by downloads - Traverse
+        // mAppsByDownloadCount
+        tree = &mAppsByDownloadCount;
+
+    } else {
+        // User wants all apps with a specific versionCode by downloads - Traverse
+        // the tree inside the relevant node in mOSVersions
+        try {
+            tree = mOSVersions.getAppsByDownloadCountTree(versionCode);
+        } catch (const InvalidVersionCodeException& e) {
+            return INVALID_INPUT;
+        } catch (const NoSuchVersionCodeException& e) {
+            // Return defaults for apps and numOfApps
+            return SUCCESS;
+        }
+    }
+
+    // TODO: Export the rest of the code of this function into a function
+    // of AppsByDownloadCountTree
+
+    // Now that we got our tree:
+
+    // Get the tree's size and check if empty
+    int treeSize = tree->getTreeSize();
+    if (treeSize == 0) {
+        // There are no apps with the specified versionCode
+        // Return defaults for apps and numOfApps
+        return SUCCESS;
+    }
+
+    // Enumerate the tree's data into an array
+    // Allocate array using malloc() because the user uses free() later
+    AppData** appDataArray = (AppData**) malloc(sizeof(AppData**) * treeSize);
+    if (appDataArray == NULL) {
+        return ALLOCATION_ERROR;
+    }
+    tree.enumerateData(*appDataArray);
+
+
+    // We need to extract the data we want from the AppData pointers array
+    // to an array of AppIds
+    // Allocate array using malloc() because the user uses free() later
+    int* appIdsArray = (int*) malloc(sizeof(int) * treeSize);
+    if (appIdsArray == NULL) {
+        // Cleanup previously allocated array
+        free(appDataArray);
+        return ALLOCATION_ERROR;
+    }
+
+    for (int i=0; i<treeSize; i++) {
+        // NOTE: We trust enumerateData() here in that all the elements in
+        // the array it returned are valid pointers
+        appIdsArray[i] = appDataArray[i]->appId;
+    }
+
+    free(appDataArray);
+
+    // Got everything we need, return it to the user
+    *numOfApps = treeSize;
+    *apps = appIdsArray;
+
+    return SUCCESS;
 }
 
 StatusType Statistics::UpdateDownloads(int groupBase, int multiplyFactor) {

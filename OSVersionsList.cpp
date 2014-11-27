@@ -116,6 +116,13 @@ int OSVersionList::getFollowingVersion(int versionCode) const {
     throw NoSuchVersionCodeException()
 }
 
+AppsByDownloadCountTree* getAppsByDownloadCountTree(int versionCode) const {
+    // Search for the OSVersionData node with the relevant versionCode
+    // (an exception will be thrown if it is not found)
+    OSVersionsData* data = getOSVersionDataByVersionCode(versionCode);
+    return &(data->versionAppsByDownloadCount);
+}
+
 
 OSVersionData* OSVersionList::getOSVersionDataByVersionCode(int versionCode) {
     if (versionCode <= 0) {

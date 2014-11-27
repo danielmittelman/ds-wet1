@@ -83,6 +83,13 @@ public:
     // or there is no versionCode in the list which is larger than the given one
     int getFollowingVersion(int versionCode) const;
 
+    // Finds a node with the given versionCode and returns the tree of apps
+    // with this versionCode, sorted by downloads count
+    // Time complexity: O(k) where k is the list's length
+    // Throws InvalidVersionCodeException if the given versionCode is <= 0
+    // Throws NoSuchVersionCodeException if is no such versionCode in the list
+    AppsByDownloadCountTree* getAppsByDownloadCountTree(int versionCode) const;
+
 
     // Exception classes
     class InvalidVersionCodeException {} : public exception;
