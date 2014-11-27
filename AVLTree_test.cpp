@@ -95,7 +95,7 @@ static bool testTreeInsertRemoveAndEnumeration() {
 	for(int i = 0 ; i < 7 ; i++) {
 		ASSERT_EQUALS(tree.getTreeSize(), i);
 		CompoundData temp = CompoundData(vals[i], chars[i]);
-		tree.insert(temp);
+		tree.insert(vals[i], temp);
 		ASSERT_EQUALS(tree.getTreeSize(), i+1);
 	}
 
@@ -132,7 +132,7 @@ static bool testTreeArrayFill() {
 	TestTree tree = TestTree();
 	for(int i = 0 ; i < 7 ; i++) {
 		CompoundData temp = CompoundData(vals[i], chars[i]);
-		tree.insert(temp);
+		tree.insert(vals[i], temp);
 	}
 
 	// Now create a sorted array with 7 elements
@@ -153,6 +153,8 @@ static bool testTreeArrayFill() {
 	for(int i = 0 ; i < arrSize ; i++) {
 		cout << array[i].letter;
 	}
+
+	return true;
 }
 
 static bool testTreeSearch() {
@@ -162,7 +164,7 @@ static bool testTreeSearch() {
 	TestTree tree = TestTree();
 	for(int i = 0 ; i < 7 ; i++) {
 		CompoundData temp = CompoundData(vals[i], chars[i]);
-		tree.insert(temp);
+		tree.insert(vals[i], temp);
 	}
 
 	CompoundData* ptr;
@@ -189,7 +191,7 @@ static bool testTreeGetMax() {
 	TestTree tree = TestTree();
 	for(int i = 0 ; i < 7 ; i++) {
 		CompoundData temp = CompoundData(vals[i], chars[i]);
-		tree.insert(temp);
+		tree.insert(vals[i], temp);
 	}
 
 	CompoundData* c = tree.getMax();

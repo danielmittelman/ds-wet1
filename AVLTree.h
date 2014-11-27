@@ -21,6 +21,7 @@
 class AVLTreeException {};
 class NullArgumentException : public AVLTreeException {};
 class ElementNotFoundException : public AVLTreeException {};
+class DuplicateNodeException : public AVLTreeException {};
 
 
 template<typename SearchType, typename DataType>
@@ -55,23 +56,41 @@ public:
 
     virtual ~AVLTree() {};
 
-	/* Returns 1 if key > data, -1 if key < data and 0 if both are considered equal */
+	/**
+	 * Abstract predicate function for comparing a search key and a data instance.
+	 * Must be overriden to enable searching, insertion and removal from the tree.
+	 * @return 1 if key > data, -1 if key < data and 0 if both are considered equal
+	 */
 	virtual int predKeyData(SearchType& key, DataType& data) const = 0;
 
-	/* Returns 1 if data > other, -1 if data < other and 0 if both are equal */
+	/**
+	 * Abstract predicate function for comparing two data instance.
+	 * Must be overriden to enable insertion and removal from the tree.
+	 * @return 1 if data > other, -1 if data < other and 0 if both are equal
+	 */
 	virtual int predDataData(DataType& data, DataType& other) const = 0;
 
-	/* Adds a new data element to the tree */
-    void insert(DataType& data) {
-    	root = recursiveInsert(root, data);
+	/**
+	 * Adds a new data element to the tree. A search key must also be provided to enable throwing an
+	 * exception if a node with a duplicate key is identified
+	 * @throws DuplicateNodeException if a node with the provided key already exists
+	 */
+    void insert(SearchType& key, DataType& data) {
+    	root = recursiveInsert(root, key, data);
     }
 
-    /* Removes a data element from the tree */
+    /**
+     * Removes a data element from the tree.
+     * @throws ElementNotFoundException if an element with the provided key was not found
+     */
     void remove(SearchType& key) {
     	root = recursiveRemove(root, key);
     }
 
-    /* Dumps the tree into a sorted array */
+    /**
+     * Dumps the tree into a sorted array.
+     * @return The size of the array
+     */
     int enumerateData(DataType array[]) {
     	NULL_CHECK(array);
     	int beginIndex = 0;
@@ -80,7 +99,11 @@ public:
     	return beginIndex;
     };
 
-    /* Fills the tree with elements from a sorted array with identical size to the tree */
+    /**
+     * Fills the tree with elements from a sorted array with identical size to the tree.
+     * Any other array (unsorted or being of a different size) will result in a failure
+     * and no exception will be thrown.
+     */
     void arrayFillTree(DataType array[]) {
     	NULL_CHECK(array);
     	int beginIndex = 0;
@@ -88,23 +111,37 @@ public:
     	doInOrderFill(root, array, &beginIndex);
     };
 
-    /* Returns the data of an element with the provided key */
+    /**
+     * Returns the data of an element with the provided key.
+     * @throws ElementNotFoundException when no element with the provided key was found
+     */
     DataType* findBySearchKey(SearchType& key) {
     	NULL_CHECK(key);
     	return &(binarySearch(root, key)->data);
     }
 
-    /* Returns the max data element in the tree */
+    /**
+     * Returns the max data element in the tree, being the right-lower-most element.
+     * @throws ElementNotFoundException when the tree is completely empty
+     */
     DataType* getMax() {
+    	if(IS_NULL(root)) {
+    		throw ElementNotFoundException();
+    	}
+
     	return &(findMax(root)->data);
     }
 
-    /* Returns the tree's size, being the total number of nodes */
+    /**
+     * Returns the total number of nodes in the tree
+     */
     const int getTreeSize() {
     	return calculateTreeSize(0, root);
     }
 
-    /* Returns the tree's height, being the length of the longest route from the root to a leaf */
+    /**
+     * Returns the tree's height, being the length of the longest route from the root to a leaf
+     */
     int getTreeHeight() const {
     	return calculateHeight(root);
     }
@@ -115,8 +152,6 @@ private:
     /* Internal helper functions */
 
     int getNodeBalanceFactor(AVLNode node) {
-    	//NULL_CHECK(node);
-
     	int rightHeight = calculateHeight(node->right);
     	int leftHeight = calculateHeight(node->left);
 
@@ -125,8 +160,6 @@ private:
 
     /* Rotation functions */
     AVLNode rrRotate(AVLNode parent) {
-    	//NULL_CHECK(parent);
-
     	AVLNode tempNode;
     	tempNode = parent->right;
     	parent->right = tempNode->left;
@@ -136,8 +169,6 @@ private:
     }
 
     AVLNode llRotate(AVLNode parent) {
-    	//NULL_CHECK(parent);
-
     	AVLNode tempNode;
     	tempNode = parent->left;
     	parent->left = tempNode->right;
@@ -147,8 +178,6 @@ private:
     }
 
     AVLNode rlRotate(AVLNode parent) {
-    	//NULL_CHECK(parent);
-
     	AVLNode tempNode;
     	tempNode = parent->right;
     	parent->right = llRotate(tempNode);
@@ -157,8 +186,6 @@ private:
     }
 
     AVLNode lrRotate(AVLNode parent) {
-    	//NULL_CHECK(parent);
-
     	AVLNode tempNode;
     	tempNode = parent->left;
     	parent->left = rrRotate(tempNode);
@@ -168,23 +195,22 @@ private:
 
 
     AVLNode balanceNode(AVLNode node) {
-    	//NULL_CHECK(node);
     	if(IS_NULL(node)) {
     		return node;
     	}
+
     	int balanceFactor = getNodeBalanceFactor(node);
 
     	/* Evaluate the balance factor and determine whether, and which,
     	 * rotation is required to balance the tree */
-
     	AVLNode balancedNode = node;
-    	if(balanceFactor > 1) {
+    	if(balanceFactor >= 2) {
     		if(getNodeBalanceFactor(node->left) > 0) {
     			balancedNode = llRotate(node);
     		} else {
     			balancedNode = lrRotate(node);
     		}
-    	} else if(balanceFactor < -1) {
+    	} else if(balanceFactor <= -2) {
     		if(getNodeBalanceFactor(node->right) > 0) {
     			balancedNode = rlRotate(node);
     		} else {
@@ -198,21 +224,25 @@ private:
 
     /* Internal helper recursive functions */
 
-    AVLNode recursiveInsert(AVLNode node, DataType& data) {
-    	// If node is null, the algorithm reached the insertion location. Create and return
+    AVLNode recursiveInsert(AVLNode node, SearchType& key, DataType& data) {
+    	// If node is null, the algorithm has reached the insertion location. Create and return
     	if(IS_NULL(node)) {
     		AVLNode newNode = new AVLNodeStruct<SearchType, DataType>();
     		newNode->data = data;
     		newNode->root = root;
     		return newNode;
     	}
+    	// If there is another node with the same key, stop and throw an exception
+    	else if(predKeyData(key, node->data) == 0) {
+    		throw DuplicateNodeException();
+    	}
     	// If the current node is considered greater than the data, continue on the left subtree
     	else if(predDataData(data, node->data) < 0) {
-    		node->left = recursiveInsert(node->left, data);
+    		node->left = recursiveInsert(node->left, key, data);
     	}
     	// If the current node is considered lower than the data, continue on the right subtree
     	else {
-    		node->right = recursiveInsert(node->right, data);
+    		node->right = recursiveInsert(node->right, key, data);
     	}
 
     	// Finally, balance the current node
@@ -221,7 +251,7 @@ private:
 
     AVLNode recursiveRemove(AVLNode node, SearchType& searchKey) {
     	if(IS_NULL(node)) {
-    		return NULL;
+    		throw ElementNotFoundException();
     	}
 
     	if(predKeyData(searchKey, node->data) > 0) {
@@ -253,7 +283,7 @@ private:
     			// Find the next inorder node (find the left-most node in the right subtree)
     			AVLNode nextNode = findNextInorder(node->right);
 
-    			// Substitute the nodes' data, preserving their children pointers
+    			// Substitute the nodes' data, preserving their child pointers
     			DataType temp = nextNode->data;
     			nextNode->data = node->data;
     			node->data = temp;
