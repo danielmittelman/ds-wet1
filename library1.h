@@ -20,7 +20,7 @@ extern "C" {
 
 /* Return Values
  * ----------------------------------- */
-typedef enum {
+    typedef enum {
     SUCCESS = 0,
     FAILURE = -1,
     ALLOCATION_ERROR = -2,

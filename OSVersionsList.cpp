@@ -28,7 +28,7 @@ void OSVersionList::addVersion(int versionCode) {
 int OSVersionList::getTopAppId(int versionCode) {
     // Search for the OSVersionData node with the relevant versionCode
     // (an exception will be thrown if it is not found)
-    OSVersionsData* data = getAppDataByVersionCode(versionCode);
+    OSVersionsData* data = getOSVersionDataByVersionCode(versionCode);
 
     // Found our node, return the top app if there is one
     if (data->versionTopAppId == INVALID_VERSION_TOP_APP) {
@@ -41,7 +41,7 @@ int OSVersionList::getTopAppId(int versionCode) {
 void OSVersionList::addApp(const AppData* appDataPtr) {
     // Search for the OSVersionData node with the relevant versionCode
     // (an exception will be thrown if it is not found)
-    OSVersionsData* data = getAppDataByVersionCode(versionCode);
+    OSVersionsData* data = getOSVersionDataByVersionCode(versionCode);
 
     // Found our node, add the app to the versionAppsByDownloadCount tree in it
     try {
@@ -54,7 +54,9 @@ void OSVersionList::addApp(const AppData* appDataPtr) {
     // versionTopAppDownloadCount if needed
     // NOTE: We could have recalculated the app maximum as in removeApp, but
     // this is faster and simpler
-    if (data->versionTopAppDownloadCount < appDataPtr->downloadCount) {
+    if ( (data->versionTopAppDownloadCount < appDataPtr->downloadCount) ||
+         (  data->versionTopAppDownloadCount == appDataPtr->downloadCount &&
+            data->versionTopAppId > appDataPtr->appId  ) ) {
         data->versionTopAppDownloadCount = appDataPtr->downloadCount;
         data->versionTopAppId = appDataPtr->appId;
     }
@@ -63,7 +65,7 @@ void OSVersionList::addApp(const AppData* appDataPtr) {
 void OSVersionList::removeApp(int versionCode, int appId) {
     // Search for the OSVersionData node with the relevant versionCode
     // (an exception will be thrown if it is not found)
-    OSVersionsData* data = getAppDataByVersionCode(versionCode);
+    OSVersionsData* data = getOSVersionDataByVersionCode(versionCode);
 
     // Found our node, remove the app from the versionAppsByDownloadCount tree
     // in it
@@ -115,7 +117,7 @@ int OSVersionList::getFollowingVersion(int versionCode) const {
 }
 
 
-OSVersionData* OSVersionList::getAppDataByVersionCode(int versionCode) {
+OSVersionData* OSVersionList::getOSVersionDataByVersionCode(int versionCode) {
     if (versionCode <= 0) {
         throw InvalidVersionCodeException();
     }

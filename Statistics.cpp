@@ -63,7 +63,8 @@ StatusType Statistics::AddApplication(int appId, int versionCode, int downloadCo
         mAppsByDownloadCount.addApp(appDataPtr);
 
         // 4. Update mTopAppId and mTopAppDownloadCount if needed
-        if (mTopAppDownloadCount < downloadCount) {
+        if ( (mTopAppDownloadCount < downloadCount) ||
+             (mTopAppDownloadCount == downloadCount && mTopAppId > appId) ) {
             mTopAppDownloadCount = downloadCount;
             mTopAppId = appId;
         }
@@ -115,7 +116,7 @@ StatusType Statistics::UpgradeApplication(int appId) {
     // Get the following versionCode in the mOSVersions
     int newVersionCode = mOSVersions.getFollowingVersion(oldVersionCode);
 
-    // Remove old appData pointer from the old place in the mOSVersions tree
+    // Remove old appData pointer from the old place in tthe mOSVersions tree
     mOSVersions.remove(appData->oldVersionCode, appId);
     // Update the AppData structure with the new version
     appData->versionCode = newVersionCode;
@@ -124,7 +125,37 @@ StatusType Statistics::UpgradeApplication(int appId) {
 }
 
 StatusType Statistics::GetTopApp(int versionCode, int *appId) {
-    // TODO
+    if (appId == NULL) {
+        return INVALID_INPUT;
+    }
+
+    *appId = -1;    // Default value for appId in case of an error
+
+    if (versionCode < 0) {
+        // User wants the global top app in the whole system
+        if (mTopAppId == INVALID_TOP_APP_ID) {
+            // There are no apps in the system
+            return FAILURE;
+        }
+
+        *appId = mTopAppId;
+        return SUCCESS;
+    }
+
+    // User wants the top app of the specified versionCode
+    try {
+        *appId = mOSVersions.getTopAppId(versionCode);
+    } catch (InvalidVersionCodeException) {
+        return INVALID_INPUT;
+    } catch (NoSuchVersionCodeException) {
+        // There is no OSVersion with the specified versionCode
+        return FAILURE;
+    } catch (NoSuchAppException) {
+        // There are no apps with the specified versionCode
+        return FAILURE;
+    }
+
+    return SUCCESS;
 }
 
 StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *numOfApps) {

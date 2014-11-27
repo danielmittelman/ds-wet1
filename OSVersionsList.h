@@ -99,7 +99,7 @@ private:
     // Helper function to get the OSVersionData of a specific versionCode
     // Throws InvalidVersionCodeException if the given versionCode is <= 0
     // Throws NoSuchVersionCodeException if is no such versionCode in the list
-    OSVersionData* getAppDataByVersionCode(int versionCode);
+    OSVersionData* getOSVersionDataByVersionCode(int versionCode);
 
 
     // Predicate to be used with getDataByPredicate
