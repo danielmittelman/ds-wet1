@@ -57,20 +57,6 @@ public:
     virtual ~AVLTree() {};
 
 	/**
-	 * Abstract predicate function for comparing a search key and a data instance.
-	 * Must be overriden to enable searching, insertion and removal from the tree.
-	 * @return 1 if key > data, -1 if key < data and 0 if both are considered equal
-	 */
-	virtual int predKeyData(SearchType& key, DataType& data) const = 0;
-
-	/**
-	 * Abstract predicate function for comparing two data instance.
-	 * Must be overriden to enable insertion and removal from the tree.
-	 * @return 1 if data > other, -1 if data < other and 0 if both are equal
-	 */
-	virtual int predDataData(DataType& data, DataType& other) const = 0;
-
-	/**
 	 * Adds a new data element to the tree. A search key must also be provided to enable throwing an
 	 * exception if a node with a duplicate key is identified
 	 * @throws DuplicateNodeException if a node with the provided key already exists
@@ -148,6 +134,21 @@ public:
 
 private:
     AVLNode root;
+
+    /**
+     * Abstract predicate function for comparing a search key and a data instance.
+     * Must be overriden to enable searching, insertion and removal from the tree.
+     * @return 1 if key > data, -1 if key < data and 0 if both are considered equal
+     */
+    virtual int predKeyData(const SearchType& key, const DataType& data) const = 0;
+
+    /**
+     * Abstract predicate function for comparing two data instance.
+     * Must be overriden to enable insertion and removal from the tree.
+     * @return 1 if data > other, -1 if data < other and 0 if both are equal
+     */
+    virtual int predDataData(const DataType& data, const DataType& other) const = 0;
+
 
     /* Internal helper functions */
 

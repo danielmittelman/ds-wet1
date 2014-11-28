@@ -83,6 +83,32 @@ StatusType Statistics::AddApplication(int appId, int versionCode, int downloadCo
 }
 
 StatusType Statistics::RemoveApplication(int appId) {
+    // Find the app's data using mAppsById
+    try {
+        AppData** appData = mAppsById.getAppById(appId);
+    } catch (const ElementNotFoundException& e) {
+        return FAILURE;
+    }
+
+
+    // Remove the app from the mAppsById tree
+    try {
+        mAppsById.remove(appId);
+    } catch (const ElementNotFoundException& e) {
+        return FAILURE;
+    }
+
+    // Remove the app from the mAppsByDownloadCount tree
+    try {
+        mAppsByDownloadCount.remove(/* TODO */);
+    } catch (const ElementNotFoundException& e) {
+        return FAILURE;
+    }
+
+    // Remove the app from the mOSVersions data structure
+    // TODO
+
+    // Finally, remove the AppData structure from mAppsList
     // TODO
 }
 

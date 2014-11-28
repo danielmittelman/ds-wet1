@@ -62,7 +62,7 @@ public:
     // Throws NoSuchVersionCodeException if is no such versionCode in the list
     // Throws AppAlreadyExistsException if the app already exists in the
     // version's versionAppsByDownloadCount tree
-    void addApp(const AppData* appdata);
+    void addApp(const AppData* appDataPtr);
 
     // Removes an app from the data structue. Must receive the app's
     // versionCode because apps are indexed by versionCode

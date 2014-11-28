@@ -9,7 +9,10 @@
 
 #include "library1.h"
 #include "common.h"
+#include "DoubleLinkedList.h"
 #include "OSVersionsList.h"
+#include "AVLTree.h"
+#include "AppsByIdTree.h"
 
 
 // Define AppsList - A list of AppData
