@@ -46,6 +46,11 @@ public:
 	CompoundData(int id, char letter) : id(id), letter(letter) {};
 };
 
+ostream& operator<<(ostream& os, CompoundData& data) {
+	os << data.letter;
+	return os;
+}
+
 /* AVLTree implementation - A new class extending AVLTree with predetermined types that
  * overrides the predicate methods. This class can then be used as a fully functional AVL tree */
 class TestTree : public AVLTree<int, CompoundData> {
@@ -120,6 +125,35 @@ static bool testTreeInsertRemoveAndEnumeration() {
 	for(int i = 0 ; i < arrSize ; i++) {
 		cout << array2[i].letter;
 	}
+
+
+	// Do the same test with a longer input, in this case all the lowercase letters
+	TestTree tree2 = TestTree();
+	int vals2[] = {10,22,4,16,25,7,14,1,6,15,20,8,23,26,11,2,12,3,5,18,19,13,24,17,9,21};
+	for(int i = 0 ; i < 26 ; i++) {
+		CompoundData temp = CompoundData(vals2[i], ('a'-1) + vals2[i]);
+		tree2.insert(vals2[i], temp);
+	}
+
+	// Enumerate the tree and print to screen
+	arrSize = tree2.getTreeSize();
+	CompoundData array3[arrSize];
+	ASSERT_EQUALS(arrSize, tree2.enumerateData(array3));
+
+	for(int i = 0 ; i < 26 ; i++) {
+		cout << array3[i].letter;
+	}
+
+	// Delete elements
+	int elms[] = {1,3,7,9,10,12,20,22,23,24,26}; // Delete a,c,g,i,j,l,t,v,w,x,z
+	for(int i = 0 ; i < 11 ; i++)
+		tree2.remove(elms[i]);
+
+
+
+	// Use these to inspect the internal structure of the root
+	tree2.printNodeStructure();
+	tree2.printAllBFs();
 
 	return true;
 }
