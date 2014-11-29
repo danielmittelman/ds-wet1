@@ -27,14 +27,14 @@ class DuplicateNodeException : public AVLTreeException {};
 template<typename SearchType, typename DataType>
 struct AVLNodeStruct {
 	DataType data;
+	int height;
 	struct AVLNodeStruct<SearchType, DataType>* right;
 	struct AVLNodeStruct<SearchType, DataType>* left;
-	struct AVLNodeStruct<SearchType, DataType>* root;
 
 	AVLNodeStruct() {
 		right = NULL;
 		left = NULL;
-		root = NULL;
+		height = 0;
 	}
 };
 
@@ -75,7 +75,7 @@ public:
 
     /**
      * Dumps the tree into a sorted array.
-     * @return The size of the array
+     * @return The size of the array that was used
      */
     int enumerateData(DataType array[]) {
     	NULL_CHECK(array);
@@ -121,7 +121,7 @@ public:
     /**
      * Returns the total number of nodes in the tree
      */
-    const int getTreeSize() {
+    const int getTreeSize() const {
     	return calculateTreeSize(0, root);
     }
 
@@ -129,8 +129,45 @@ public:
      * Returns the tree's height, being the length of the longest route from the root to a leaf
      */
     int getTreeHeight() const {
-    	return calculateHeight(root);
+    	int leftHeight = (IS_NULL(root->left)) ? -1 : root->left->height;
+    	int rightHeight = (IS_NULL(root->right)) ? -1 : root->right->height;
+
+    	return MAX(leftHeight, rightHeight) + 1;
     }
+
+
+
+    // THESE ARE METHODS FOR TESTING THE INTERNAL STRUCTURE OF THE TREE
+    // !!!!!!!!!!! REMOVE THESE BEFORE FINAL SUBMISSION !!!!!!!!!!!!!!!
+    void printAllBFs() {
+    	printBF(root);
+    }
+
+    void printBF(AVLNode node) {
+    	if(!node) return;
+
+    	printBF(node->left);
+    	std::cout << getNodeBalanceFactor(node);
+    	printBF(node->right);
+    }
+
+    void printNodeStructure() {
+    	AVLNode node = root->right; // CHANGE THIS TO SEE ANOTHER NODE
+    	std::cout << "\n\nNode data: " << node->data << std::endl;
+    	std::cout << "Left subtree: "; printInOrder(node->left); std::cout << std::endl;
+    	std::cout << "Right subtree: "; printInOrder(node->right); std::cout << std::endl;
+    }
+
+    void printInOrder(AVLNode node) {
+    	if(IS_NULL(node)) {
+    		return;
+    	}
+
+    	printInOrder(node->left);
+    	std::cout << node->data << ",";
+    	printInOrder(node->right);
+    }
+    // !!!!!!!!!!!!!!!!!!!!!!!!!! END REMOVE !!!!!!!!!!!!!!!!!!!!!!!!!
 
 private:
     AVLNode root;
@@ -152,9 +189,19 @@ private:
 
     /* Internal helper functions */
 
+    void adjustNodeHeight(AVLNode node) {
+    	if(IS_NULL(node)) {
+    		return;
+    	}
+
+    	int leftHeight = (IS_NULL(node->left)) ? -1 : node->left->height;
+    	int rightHeight = (IS_NULL(node->right)) ? -1 : node->right->height;
+    	node->height = MAX(leftHeight, rightHeight) + 1;
+    }
+
     int getNodeBalanceFactor(AVLNode node) {
-    	int rightHeight = calculateHeight(node->right);
-    	int leftHeight = calculateHeight(node->left);
+    	int rightHeight = (IS_NULL(node->right)) ? -1 : node->right->height;
+    	int leftHeight = (IS_NULL(node->left)) ? -1 : node->left->height;
 
     	return leftHeight - rightHeight;
     }
@@ -166,6 +213,9 @@ private:
     	parent->right = tempNode->left;
     	tempNode->left = parent;
 
+    	adjustNodeHeight(tempNode->left);
+    	adjustNodeHeight(tempNode);
+
     	return tempNode;
     }
 
@@ -175,6 +225,9 @@ private:
     	parent->left = tempNode->right;
     	tempNode->right = parent;
 
+    	adjustNodeHeight(tempNode->right);
+    	adjustNodeHeight(tempNode);
+
     	return tempNode;
     }
 
@@ -182,6 +235,7 @@ private:
     	AVLNode tempNode;
     	tempNode = parent->right;
     	parent->right = llRotate(tempNode);
+    	adjustNodeHeight(tempNode);
 
     	return rrRotate(parent);
     }
@@ -190,6 +244,7 @@ private:
     	AVLNode tempNode;
     	tempNode = parent->left;
     	parent->left = rrRotate(tempNode);
+    	adjustNodeHeight(tempNode);
 
     	return llRotate(parent);
     }
@@ -230,10 +285,9 @@ private:
     	if(IS_NULL(node)) {
     		AVLNode newNode = new AVLNodeStruct<SearchType, DataType>();
     		newNode->data = data;
-    		newNode->root = root;
     		return newNode;
     	}
-    	// If there is another node with the same key, stop and throw an exception
+    	// If there is another node with the same key, halt and throw an exception
     	else if(predKeyData(key, node->data) == 0) {
     		throw DuplicateNodeException();
     	}
@@ -245,6 +299,10 @@ private:
     	else {
     		node->right = recursiveInsert(node->right, key, data);
     	}
+
+    	// Update this node's height. If either one of its children does not exist,
+    	// consider its height to be -1
+    	adjustNodeHeight(node);
 
     	// Finally, balance the current node
     	return balanceNode(node);
@@ -290,12 +348,13 @@ private:
     			node->data = temp;
 
     			// Continue by running the algorithm on the right subtree and delete the replaced node.
-    			// The successor node will have either 0 or 1 (right) child.
+    			// The successor node will have either 0 or 1 (right) children.
     			node->right = recursiveRemove(node->right, searchKey);
     		}
     	}
 
-    	// Finally, balance the current node
+    	// Finally, fix the node's height and balance the node
+    	adjustNodeHeight(node);
     	return balanceNode(node);
     }
 
@@ -334,18 +393,6 @@ private:
 
     	// The size of the tree consists of the size of the right tree, left tree and the current node
     	return 1 + calculateTreeSize(0, node->right) + calculateTreeSize(0, node->left);
-    }
-
-    int calculateHeight(AVLNode node) {
-    	int height = 0;
-
-    	if(!IS_NULL(node)) {
-    		int leftHeight = calculateHeight(node->left);
-    		int rightHeight = calculateHeight(node->right);
-    		height = MAX(leftHeight, rightHeight) + 1;
-    	}
-
-    	return height;
     }
 
     void doInOrderEnumeration(AVLNode node, DataType* array, int* currentIndex) {
