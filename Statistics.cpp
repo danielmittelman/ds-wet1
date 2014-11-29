@@ -58,9 +58,22 @@ StatusType Statistics::AddApplication(int appId, int versionCode, int downloadCo
         // added data / pointers
 
         // 3. Insert new app to mAppsById and mAppsByDownloadCount
-        mAppsById.addApp(appDataPtr);
+        try {
+            mAppsById.addApp(appDataPtr);
+        } catch (const exception& e) {
+            mAppsList.remove(appData);  // TODO
+            mOSVersions.popFront();     // TODO
+            throw;
+        }
 
-        mAppsByDownloadCount.addApp(appDataPtr);
+        try {
+            mAppsByDownloadCount.addApp(appDataPtr);
+        } catch (const exception& e) {
+            mAppsList.remove(appData);  // TODO
+            mOSVersions.popFront();     // TODO
+            mAppsById.remove(appId);
+            throw;
+        }
 
         // 4. Update mTopAppId and mTopAppDownloadCount if needed
         if ( (mTopAppDownloadCount < downloadCount) ||
@@ -93,14 +106,14 @@ StatusType Statistics::RemoveApplication(int appId) {
 
     // Remove the app from the mAppsById tree
     try {
-        mAppsById.remove(appId);
+        mAppsById.removeApp(appId);
     } catch (const ElementNotFoundException& e) {
         return FAILURE;
     }
 
     // Remove the app from the mAppsByDownloadCount tree
     try {
-        mAppsByDownloadCount.remove(/* TODO */);
+        mAppsByDownloadCount.removeApp(appData->downloadCount, appData->appId);
     } catch (const ElementNotFoundException& e) {
         return FAILURE;
     }
@@ -127,8 +140,8 @@ StatusType Statistics::IncreaseDownloads(int appId, int downloadIncrease) {
     mOSVersions.insert(*appData);
 
     // Update the mAppsByDownloadCount tree
-    mAppsByDownloadCount.remove(oldDownloadCount, appId);
-    mAppsByDownloadCount.insert(*appData);
+    mAppsByDownloadCount.removeApp(oldDownloadCount, appId);
+    mAppsByDownloadCount.addApp(*appData);
 
     // Update the app's AppData structure
     appData->downloadCount = newDownloadCount;
