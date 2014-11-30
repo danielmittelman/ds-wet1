@@ -108,7 +108,7 @@ public:
 
 
     // Exception classes
-    class NoSuchNodeException {} : public exception;
+    class NoSuchNodeException : public exception {};
 
 protected:
     struct Node {

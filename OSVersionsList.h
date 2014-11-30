@@ -92,11 +92,11 @@ public:
 
 
     // Exception classes
-    class InvalidVersionCodeException {} : public exception;
-    class VersionCodeNotLargerThanCurrentException {} : public exception;
-    class NoSuchVersionCodeException {} : public exception;
-    class NoSuchAppException {} : public exception;
-    class AppAlreadyExistsException {} : public exception;
+    class InvalidVersionCodeException : public exception {};
+    class VersionCodeNotLargerThanCurrentException : public exception {};
+    class NoSuchVersionCodeException : public exception {};
+    class NoSuchAppException : public exception {};
+    class AppAlreadyExistsException : public exception {};
 
 private:
     enum {
