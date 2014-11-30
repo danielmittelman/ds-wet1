@@ -11,15 +11,15 @@
 
 // Define AppData - Data structure to hold the information for each app
 struct AppData {
-    int appId;
-    int versionCode;
-    int downloadCount;
+	int appId;
+	int versionCode;
+	int downloadCount;
 
-    // Constructor for this struct, for simpler initialization
-    AppData(int appId, int versionCode, int downloadCount) :
-            appId(appId),
-            versionCode(versionCode),
-            downloadCount(downloadCount) {}
+	// Constructor for this struct, for simpler initialization
+	AppData(int appId, int versionCode, int downloadCount) :
+			appId(appId),
+			versionCode(versionCode),
+			downloadCount(downloadCount) {}
 
 };
 

@@ -21,10 +21,10 @@ extern "C" {
 /* Return Values
  * ----------------------------------- */
 typedef enum {
-    SUCCESS = 0,
-    FAILURE = -1,
-    ALLOCATION_ERROR = -2,
-    INVALID_INPUT = -3
+	SUCCESS = 0,
+	FAILURE = -1,
+	ALLOCATION_ERROR = -2,
+	INVALID_INPUT = -3
 } StatusType;
 
 /* Required Interface for the Data Structure

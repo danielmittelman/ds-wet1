@@ -17,43 +17,43 @@
 
 class Statistics {
 public:
-    Statistics();
+	Statistics();
 
-    ~Statistics();
+	~Statistics();
 
-    StatusType AddVersion(int versionCode);
+	StatusType AddVersion(int versionCode);
 
-    StatusType AddApplication(int appId, int versionCode, int downloadCount);
+	StatusType AddApplication(int appId, int versionCode, int downloadCount);
 
-    StatusType RemoveApplication(int appId);
+	StatusType RemoveApplication(int appId);
 
-    StatusType IncreaseDownloads(int appId, int downloadIncrease);
+	StatusType IncreaseDownloads(int appId, int downloadIncrease);
 
-    StatusType UpgradeApplication(int appId);
+	StatusType UpgradeApplication(int appId);
 
-    StatusType GetTopApp(int versionCode, int *appId);
+	StatusType GetTopApp(int versionCode, int *appId);
 
-    StatusType GetAllAppsByDownloads(int versionCode, int **apps, int *numOfApps);
+	StatusType GetAllAppsByDownloads(int versionCode, int **apps, int *numOfApps);
 
-    StatusType UpdateDownloads(int groupBase, int multiplyFactor);
+	StatusType UpdateDownloads(int groupBase, int multiplyFactor);
 
 private:
-    enum {
-        INVALID_TOP_APP_ID = -1
-    };
+	enum {
+		INVALID_TOP_APP_ID = -1
+	};
 
-    AppsList mAppsList;
-    OSVersionsList mOSVersionsList;
-    AppsByIdTree mAppsById;
-    AppsByDownloadCountTree mAppsByDownloadCount;
+	AppsList mAppsList;
+	OSVersionsList mOSVersionsList;
+	AppsByIdTree mAppsById;
+	AppsByDownloadCountTree mAppsByDownloadCount;
 
-    // globalTopAppId will be INVALID_TOP_APP_ID if there are no apps
-    int mTopAppId;
-    int mTopAppDownloadCount;
+	// globalTopAppId will be INVALID_TOP_APP_ID if there are no apps
+	int mTopAppId;
+	int mTopAppDownloadCount;
 
-    // Helper function for updating downloads in an AppsByDownloadCountTree.
-    void doUpdateDownloadsInTree(AppsByDownloadCountTree* tree, int groupBase,
-            int multiplyFactor, bool shouldUpdateValues);
+	// Helper function for updating downloads in an AppsByDownloadCountTree.
+	void doUpdateDownloadsInTree(AppsByDownloadCountTree* tree, int groupBase,
+			int multiplyFactor, bool shouldUpdateValues);
 };
 
 #endif    /* _234218_WET1_STATISTICS_H_ */
