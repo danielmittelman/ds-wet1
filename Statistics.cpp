@@ -356,7 +356,7 @@ StatusType Statistics::UpdateDownloads(int groupBase, int multiplyFactor) {
 
 		// Update the k OSVersion trees, this time not updating the actual data
 		for (OSVersionsList::Iterator it = mOSVersionsList.begin();
-				it != mOSVersionsList.end(); i++) {
+				it != mOSVersionsList.end(); it++) {
 
 			AppsByDownloadCountTree* tree =
 					mOSVersionsList.getAppsByDownloadCountTree(it->versionCode);
@@ -371,21 +371,13 @@ StatusType Statistics::UpdateDownloads(int groupBase, int multiplyFactor) {
 }
 
 
-void doUpdateDownloadsInTree(AppsByDownloadCountTree* tree, int groupBase,
-		int multiplyFactor, bool shouldUpdateValues) {
-
-	if (groupBase < 1 || multiplyFactor <= 0) {
-		return INVALID_INPUT;
-	}
+void Statistics::doUpdateDownloadsInTree(AppsByDownloadCountTree* tree,
+        int groupBase, int multiplyFactor, bool shouldUpdateValues) {
 
 	// Dump the AppsByDownloadCountTree into an array
 	int treeSize = tree->getTreeSize();
-	AppsListIterator* apps = NULL;
-	try {
-		apps = new AppsListIterator[treeSize];
-	} catch (const std::bad_alloc& e) {
-		return ALLOCATION_ERROR;
-	}
+    // This may throw bad_alloc
+	AppsListIterator* apps = new AppsListIterator[treeSize];
 	int arraySize = tree->enumerateData(apps);
 
 	// Create two stacks using DoubleLinkedLists, one for holding the elements that
@@ -417,18 +409,23 @@ void doUpdateDownloadsInTree(AppsByDownloadCountTree* tree, int groupBase,
 		// Select the next stack from which to pop into apps by the element
 		// with the lowest download count. If download counts are equal, select
 		// the element with highest id.
-		AppsStackPtr* nextAppsStackToPopFrom = NULL;
+		AppsStack* nextAppsStackToPopFrom = NULL;
 
 		if (stack1.isEmpty()) {
 			nextAppsStackToPopFrom = &stack2;
 		} else if (stack2.isEmpty()) {
 			nextAppsStackToPopFrom = &stack1;
 		} else {
-			int dlCount1 = stack1.begin()->downloadCount;
-			int appId1 = stack1.begin()->appId;
+            // NOTE: Each of the stacks' elements is actually an
+            // AppsListIterator
+            AppsListIterator iter1 = *(*(stack1.begin()));
+            AppsListIterator iter2 = *(*(stack2.begin()));
 
-			int dlCount2 = stack2.begin()->downloadCount;
-			int appId2 = stack2.begin()->appId;
+			int dlCount1 = iter1->downloadCount;
+			int appId1 = iter2->appId;
+
+			int dlCount2 = iter1->downloadCount;
+			int appId2 = iter2->appId;
 
 			if (dlCount1 < dlCount2) {
 				nextAppsStackToPopFrom = &stack1;
@@ -445,7 +442,7 @@ void doUpdateDownloadsInTree(AppsByDownloadCountTree* tree, int groupBase,
 		}
 
 		// Pop from nextAppsStackToPopFrom into apps
-		apps[i] = *(nextAppsStackToPopFrom->begin());
+		apps[i] = *(*(nextAppsStackToPopFrom->begin()));
 		nextAppsStackToPopFrom->removeFront();
 	}
 
@@ -454,6 +451,4 @@ void doUpdateDownloadsInTree(AppsByDownloadCountTree* tree, int groupBase,
 
 	// Make sure everything's deallocated
 	delete[] apps;
-	delete stack1;
-	delete stack2;
 }

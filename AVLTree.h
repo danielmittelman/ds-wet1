@@ -137,6 +137,7 @@ public:
 
 	// THESE ARE METHODS FOR TESTING THE INTERNAL STRUCTURE OF THE TREE
 	// !!!!!!!!!!! REMOVE THESE BEFORE FINAL SUBMISSION !!!!!!!!!!!!!!!
+    /*
 	void printAllBFs() {
 		printBF(root);
 	}
@@ -165,6 +166,7 @@ public:
 		std::cout << node->data << ",";
 		printInOrder(node->right);
 	}
+    */
 	// !!!!!!!!!!!!!!!!!!!!!!!!!! END REMOVE !!!!!!!!!!!!!!!!!!!!!!!!!
 
 private:

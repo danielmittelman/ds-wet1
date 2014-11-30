@@ -43,7 +43,8 @@ public:
 		// Constructor from node pointer
 		Iterator(Node* node) : mNode(node) {};
 
-		Iterator operator++() {
+        // Postfix ++
+		Iterator operator++(int) {
 			if (mNode == NULL) {
 				return *this;
 			}
@@ -52,6 +53,14 @@ public:
 			mNode = mNode->next;
 			return Iterator(oldPtr);
 		}
+
+        // Comparison operators
+        bool operator==(const Iterator& other) {
+            return mNode == other.mNode;
+        }
+        bool operator!=(const Iterator& other) {
+            return (! ((*this) == other));
+        }
 
 		// Getters for the data
 		ValueType* operator*() {
