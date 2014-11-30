@@ -48,7 +48,7 @@ private:
     };
 
     AppsList mAppsList;
-    OSVersionsList mOSVersionsList;
+    OSVersionsList mOSVersions;
     AppsByIdTree mAppsById;
     AppsByDownloadCountTree mAppsByDownloadCount;
 
