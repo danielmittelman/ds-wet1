@@ -11,14 +11,14 @@
 #include "common.h"
 
 
-class AppsByIdTree: public AVLTree< int, AppData* > {
+class AppsByIdTree: public AVLTree< int, AppsListIterator > {
 public:
     // Adds an app to the data structue
     // Time complexity: O(log(n)) where n is the number of apps in the tree
     // Throws NullArgumentException if appData is null
     // Throws DuplicateNodeException if an appwith the provided id already
     // exists
-    void addApp(const AppData* appData);
+    void addApp(const AppsListIterator& appData);
 
     // Removes an app from the data structue
     // Time complexity: O(log(n)) where n is the number of apps in the tree
@@ -30,7 +30,7 @@ public:
     // Time complexity: O(log(n)) where n is the number of apps in the tree
     // Throws ElementNotFoundException if an app with the provided id was not
     // found
-    AppData** getAppById(int appId) const;
+    AppsListIterator* getAppById(int appId) const;
 
 private:
     /**
@@ -38,14 +38,14 @@ private:
      * Must be overriden to enable searching, insertion and removal from the tree.
      * @return 1 if key > data, -1 if key < data and 0 if both are considered equal
      */
-    virtual int predKeyData(const int& key, const AppData* data) const;
+    virtual int predKeyData(const int& key, const AppsListIterator& data) const;
 
     /**
      * Abstract predicate function for comparing two data instance.
      * Must be overriden to enable insertion and removal from the tree.
      * @return 1 if data > other, -1 if data < other and 0 if both are equal
      */
-    virtual int predDataData(const AppData* data, const AppData* other) const;
+    virtual int predDataData(const AppsListIterator& data, const AppsListIterator& other) const;
 };
 
 #endif    /* _234218_WET1_APPS_BY_ID_TREE_H_ */

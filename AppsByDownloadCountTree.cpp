@@ -10,7 +10,7 @@
 #include "common.h"
 
 
-void AppsByDownloadCountTree::addApp(const AppData* appData) {
+void AppsByDownloadCountTree::addApp(const AppsListIterator& appData) {
     // This function is basically an alias to AVLTree::insert()
 
     if (appData == NULL) {
@@ -32,7 +32,7 @@ void AppsByDownloadCountTree::removeApp(int downloadCount, int appId) {
 
 
 virtual int AppsByDownloadCountTree::predKeyData(const DownloadCountAndId& key,
-        const AppData* data) const {
+        const AppsListIterator& data) const {
 
     // Compare an appId with an AppData pointer:
     // Simply compare the given appId with the appId in the structure
@@ -64,8 +64,8 @@ virtual int AppsByDownloadCountTree::predKeyData(const DownloadCountAndId& key,
     return 0;
 }
 
-virtual int AppsByDownloadCountTree::predDataData(const AppData* data,
-        const AppData* other) const {
+virtual int AppsByDownloadCountTree::predDataData(const AppsListIterator& data,
+        const AppsListIterator& other) const {
 
     // Compare 2 appdata pointers by download count and appId
     if (data == NULL || other == NULL) {

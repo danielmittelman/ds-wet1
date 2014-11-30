@@ -38,7 +38,7 @@ int OSVersionList::getTopAppId(int versionCode) {
     return data->versionTopAppId;
 }
 
-void OSVersionList::addApp(const AppData* appDataPtr) {
+void OSVersionList::addApp(const AppsListIterator& appDataPtr) {
     // Search for the OSVersionData node with the relevant versionCode
     // (an exception will be thrown if it is not found)
     OSVersionsData* data = getOSVersionDataByVersionCode(versionCode);

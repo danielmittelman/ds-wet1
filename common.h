@@ -22,4 +22,9 @@ struct AppData {
 
 };
 
+// Define AppsList - A list of AppData
+typedef DoubleLinkedList<AppData> AppsList;
+typedef AppsList::Iterator AppsListIterator;
+
+
 #endif    /* _234218_WET1_COMMON_H_ */

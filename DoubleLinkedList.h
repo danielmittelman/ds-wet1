@@ -18,6 +18,30 @@ using std::exception;
 template<typename ValueType>
 class DoubleLinkedList {
 public:
+    // Define an iterator class, to be returned on insert and which can
+    // be provided to remove (among other things).
+    class Iterator {
+    public:
+        // Default constructor - Creates an invalid Iterator
+        Iterator() : mNode(NULL) {};
+
+        // Constructor from node pointer
+        Iterator(Node* node) : mNode(node) {};
+
+        // Getters for the data
+        ValueType* operator*() {
+            return mNode->data;
+        }
+        ValueType* operator->() {
+            return mNode->data;
+        }
+
+    private:
+        // Pointer to node. If mNode is NULL the iterator is considered invalid
+        Node* mNode;
+    };
+
+
     // Constructor - Creates a new empty list
     // Time complexity: O(1)
     DoubleLinkedList() : mHead(NULL), mSize(0) {}
@@ -39,7 +63,7 @@ public:
     // copied (using copy constructor) and the copy is placed in the list.
     // Time complexity: O(1)
     // Throws bad_alloc on allocation error
-    virtual void insertFront(const ValueType& elem) {
+    virtual Iterator insertFront(const ValueType& elem) {
         // Allocate a new node
         Node* node = new Node;
 
@@ -57,16 +81,36 @@ public:
         // Insert the new node into the list and update mSize accordingly
         mHead = node;
         mSize++;
+
+        return Iterator(node);
+    }
+
+    // Remove the head of the list.
+    // Time complexity: O(1)
+    virtual void removeFront() {
+        if (isEmpty()) {
+            throw NoSuchNodeException();
+        }
+
+        Node* nextNode = mHead->next;
+        // Free the front node:
+        // Free data
+        delete mHead->data;
+        // Free the node struct itself
+        delete mHead;
+
+        // Update mHead
+        mHead = nextNode;
     }
 
     // Get the first element
     // Time complexity: O(1)
     // Throws NoSuchNodeException
-    virtual ValueType* getFront() const {
+    virtual Iterator getFront() const {
         if (isEmpty()) {
             throw NoSuchNodeException();
         }
-        return mHead->data;
+        return Iterator(mHead);
     }
 
     // Get the first element
@@ -80,9 +124,6 @@ public:
     virtual bool isEmpty() const {
         return (mSize == 0);
     }
-
-    // Not needed for this exercise
-    //void remove(const ValueType& elem);
 
     // Get the value of the first node matching condition. The extra parameter
     // is sent to condition on execution.

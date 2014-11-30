@@ -10,7 +10,7 @@
 #include "common.h"
 
 
-void AppsByIdTree::addApp(const AppData* appData) {
+void AppsByIdTree::addApp(const AppsListIterator& appData) {
     // This function is basically an alias to AVLTree::insert()
 
     if (appData == NULL) {
@@ -27,7 +27,7 @@ void AppsByIdTree::removeApp(int appId) {
     remove(appData->appId);
 }
 
-AppData** AppsByIdTree::getAppById(int appId) const {
+AppsListIterator* AppsByIdTree::getAppById(int appId) const {
     // This function is basically an alias to AVLTree::findBySearchKey()
 
     return findBySearchKey(appId);
@@ -35,7 +35,7 @@ AppData** AppsByIdTree::getAppById(int appId) const {
 
 
 virtual int AppsByIdTree::predKeyData(const int& key,
-        const AppData* data) const {
+        const AppsListIterator& data) const {
 
     // Compare an appId with an AppData pointer:
     // Simply compare the given appId with the appId in the structure
@@ -56,8 +56,8 @@ virtual int AppsByIdTree::predKeyData(const int& key,
     return 0;
 }
 
-virtual int AppsByIdTree::predDataData(const AppData* data,
-        const AppData* other) const {
+virtual int AppsByIdTree::predDataData(const AppsListIterator& data,
+        const AppsListIterator& other) const {
 
     // Compare 2 appdata pointers by appId
     if (data == NULL || other == NULL) {

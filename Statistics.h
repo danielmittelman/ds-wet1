@@ -17,6 +17,7 @@
 
 // Define AppsList - A list of AppData
 typedef DoubleLinkedList<AppData> AppsList;
+typedef AppsList::Iterator AppsListIterator;
 
 
 class Statistics {
@@ -47,7 +48,7 @@ private:
     };
 
     AppsList mAppsList;
-    OSVersionsList mOSVersions;
+    OSVersionsList mOSVersionsList;
     AppsByIdTree mAppsById;
     AppsByDownloadCountTree mAppsByDownloadCount;
 

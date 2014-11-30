@@ -9,6 +9,7 @@
 
 #include <exception>
 #include "DoubleLinkedList.h"
+#include "common.h"
 
 using std::exception;
 

@@ -15,7 +15,7 @@ using std::exception;
 
 
 Statistics::Statistics() :
-    mAppsList(), mOSVersions(), mAppsById(), mAppsByDownloadCount(),
+    mAppsList(), mOSVersionsList(), mAppsById(), mAppsByDownloadCount(),
     mTopAppId(INVALID_TOP_APP_ID), mTopAppDownloadCount(-1) {}
 
 
@@ -25,8 +25,12 @@ Statistics::~Statistics() {
 }
 
 StatusType Statistics::AddVersion(int versionCode) {
+    if (versionCode <= 0) {
+        return INVALID_INPUT;
+    }
+
     try {
-        mOSVersions.addVersion(versionCode);
+        mOSVersionsList.addVersion(versionCode);
     } catch (const bad_alloc& e) {
         return ALLOCATION_ERROR;
     } catch (const InvalidVersionCodeException& e) {
@@ -39,39 +43,39 @@ StatusType Statistics::AddVersion(int versionCode) {
 }
 
 StatusType Statistics::AddApplication(int appId, int versionCode, int downloadCount) {
+    if (appId <= 0 || versionCode <= 0) {
+        return INVALID_INPUT;
+    }
+
     try {
         // 1. Create a new AppData record with the app's params, and insert it
         // into the apps list
         AppData appData(appId, versionCode, downloadCount);
-        AppData* appDataPtr = NULL;
-        appDataPtr = mAppsList.insertFront(appData);
+        AppsListIterator appDataIter = mAppsList.insertFront(appData);
 
-        // 2. Insert a pointer to the new app to mOSVersions
+        // 2. Insert a pointer to the new app to mOSVersionsList
         try {
-            mOSVersions.addApp(appDataPtr);
+            mOSVersionsList.addApp(appDataIter);
         } catch (const exception& e) {
-            mAppsList.remove(appData); // TODO
+            mAppsList.remove(appDataIter);
             throw;
         }
-
-        // TODO: More try and catch for each of these, to remove previously
-        // added data / pointers
 
         // 3. Insert new app to mAppsById and mAppsByDownloadCount
         try {
-            mAppsById.addApp(appDataPtr);
+            mAppsById.addApp(appDataIter);
         } catch (const exception& e) {
-            mAppsList.remove(appData);  // TODO
-            mOSVersions.popFront();     // TODO
+            mOSVersionsList.removeApp(versionCode, appId);
+            mAppsList.remove(appDataIter);
             throw;
         }
 
         try {
-            mAppsByDownloadCount.addApp(appDataPtr);
+            mAppsByDownloadCount.addApp(appDataIter);
         } catch (const exception& e) {
-            mAppsList.remove(appData);  // TODO
-            mOSVersions.popFront();     // TODO
-            mAppsById.remove(appId);
+            mAppsById.removeApp(appId);
+            mOSVersionsList.removeApp(versionCode, appId);
+            mAppsList.remove(appDataIter);
             throw;
         }
 
@@ -96,79 +100,138 @@ StatusType Statistics::AddApplication(int appId, int versionCode, int downloadCo
 }
 
 StatusType Statistics::RemoveApplication(int appId) {
+    if (appId <= 0) {
+        return INVALID_INPUT;
+    }
+
     // Find the app's data using mAppsById
+    AppsListIterator* appDataIterPtr = NULL;
     try {
-        AppData** appData = mAppsById.getAppById(appId);
+        appDataIterPtr = mAppsById.getAppById(appId);
     } catch (const ElementNotFoundException& e) {
         return FAILURE;
     }
+    AppsListIterator appDataIter = *appDataIterPtr;
 
-
-    // Remove the app from the mAppsById tree
     try {
+
+        // Remove the app from the mAppsById tree
         mAppsById.removeApp(appId);
+
+        // Remove the app from the mAppsByDownloadCount tree
+        mAppsByDownloadCount.removeApp(appDataIter->downloadCount, appDataIter->appId);
+
+        // Remove the app from the mOSVersionsList data structure
+        mOSVersionsList.removeApp(appDataIter->versionCode, appDataIter->appId);
+
+        // Finally, remove the AppData structure from mAppsList
+        mAppsList.remove(appDataIter);
+
     } catch (const ElementNotFoundException& e) {
         return FAILURE;
     }
 
-    // Remove the app from the mAppsByDownloadCount tree
-    try {
-        mAppsByDownloadCount.removeApp(appData->downloadCount, appData->appId);
-    } catch (const ElementNotFoundException& e) {
-        return FAILURE;
+    // Update mTopAppId and mTopAppDownloadCount if needed
+    AppsListIterator maxAppDataIter = mAppsByDownloadCount.getMax();
+    if (mTopAppDownloadCount < maxAppDataIter->downloadCount) {
+        mTopAppDownloadCount = maxAppDataIter->downloadCount;
+        mTopAppId = maxAppDataIter->appId;
     }
 
-    // Remove the app from the mOSVersions data structure
-    // TODO
-
-    // Finally, remove the AppData structure from mAppsList
-    // TODO
+    return SUCCESS;
 }
 
 StatusType Statistics::IncreaseDownloads(int appId, int downloadIncrease) {
-    // TODO: Add try..catch and return statements in this function
+    if (appId <= 0 || versionCode <= 0) {
+        return INVALID_INPUT;
+    }
 
     // Find the app's data using mAppsById
-    AppData** appData = mAppsById.getAppById(appId);
+    AppsListIterator* appDataIterPtr = NULL;
+    try {
+        appDataIterPtr = mAppsById.getAppById(appId);
+    } catch (const ElementNotFoundException& e) {
+        return FAILURE;
+    }
+    AppsListIterator appDataIter = *appDataIterPtr;
 
-    // Extract the app's current download count and calculate the new one
-    int oldDownloadCount = (*appData)->downloadCount;
-    int newDownloadCount = oldDownloadCount += downloadIncrease;
+    try {
 
-    // Update the mOSVersions data structure
-    mOSVersions.remove((*appData)->versionCode, appId);
-    mOSVersions.insert(*appData);
+        // Extract the app's current download count and calculate the new one
+        int oldDownloadCount = appDataIter->downloadCount;
+        int newDownloadCount = oldDownloadCount += downloadIncrease;
 
-    // Update the mAppsByDownloadCount tree
-    mAppsByDownloadCount.removeApp(oldDownloadCount, appId);
-    mAppsByDownloadCount.addApp(*appData);
+        // Update the mOSVersionsList data structure
+        mOSVersionsList.remove(appDataIter->versionCode, appId);
+        mOSVersionsList.insert(appDataIter);
 
-    // Update the app's AppData structure
-    appData->downloadCount = newDownloadCount;
+        // Update the mAppsByDownloadCount tree
+        mAppsByDownloadCount.removeApp(oldDownloadCount, appId);
+        mAppsByDownloadCount.addApp(appDataIter);
+
+        // Update the app's AppData structure
+        appDataIter->downloadCount = newDownloadCount;
+
+    } catch (const bad_alloc& e) {
+        return ALLOCATION_ERROR;
+    } catch (const InvalidVersionCodeException& e) {
+        return INVALID_INPUT;
+    } catch (const NoSuchVersionCodeException& e) {
+        return FAILURE;
+    } catch (const NoSuchAppException& e) {
+        return FAILURE;
+    }
+
+    return SUCCESS;
 }
 
 StatusType Statistics::UpgradeApplication(int appId) {
-    // TODO: Add try..catch and return statements in this function
+    if (appId <= 0) {
+        return INVALID_INPUT;
+    }
 
     // Find the app's data using mAppsById
-    AppData** appData = mAppsById.getAppById(appId);
+    AppsListIterator* appDataIterPtr = NULL;
+    try {
+        appDataIterPtr = mAppsById.getAppById(appId);
+    } catch (const ElementNotFoundException& e) {
+        return FAILURE;
+    }
+    AppsListIterator appDataIter = *appDataIterPtr;
 
-    // Extract the app's current versionCode
-    int oldVersionCode = (*appData)->downloadCount;
+    try {
 
-    // Get the following versionCode in the mOSVersions
-    int newVersionCode = mOSVersions.getFollowingVersion(oldVersionCode);
+        // Extract the app's current versionCode
+        int oldVersionCode = appDataIter->downloadCount;
 
-    // Remove old appData pointer from the old place in tthe mOSVersions tree
-    mOSVersions.remove((*appData)->oldVersionCode, appId);
-    // Update the AppData structure with the new version
-    (*appData)->versionCode = newVersionCode;
-    // Re-insert the appData pointer to the new place in the mOSVersions tree
-    mOSVersions.insert(*appData);
+        // Get the following versionCode in the mOSVersionsList
+        int newVersionCode = mOSVersionsList.getFollowingVersion(oldVersionCode);
+
+        // Remove old appData pointer from the old place in tthe mOSVersionsList tree
+        mOSVersionsList.remove(appDataIter->oldVersionCode, appId);
+        // Update the AppData structure with the new version
+        appDataIter->versionCode = newVersionCode;
+        // Re-insert the appData pointer to the new place in the mOSVersionsList tree
+        mOSVersionsList.insert(appDataIter);
+
+    } catch (const bad_alloc& e) {
+        return ALLOCATION_ERROR;
+    } catch (const InvalidVersionCodeException& e) {
+        return INVALID_INPUT;
+    } catch (const NoSuchVersionCodeException& e) {
+        return FAILURE;
+    } catch (const NoSuchAppException& e) {
+        return FAILURE;
+    } catch (const AppAlreadyExistsException& e) {
+        // Shouldn't really happen
+        return FAILURE;
+    }
+
+    return SUCCESS;
 }
 
 StatusType Statistics::GetTopApp(int versionCode, int *appId) {
-    if (appId == NULL) {
+    if (versionCode <= 0 || appId == NULL) {
         return INVALID_INPUT;
     }
 
@@ -187,7 +250,7 @@ StatusType Statistics::GetTopApp(int versionCode, int *appId) {
 
     // User wants the top app of the specified versionCode
     try {
-        *appId = mOSVersions.getTopAppId(versionCode);
+        *appId = mOSVersionsList.getTopAppId(versionCode);
     } catch (InvalidVersionCodeException) {
         return INVALID_INPUT;
     } catch (NoSuchVersionCodeException) {
@@ -202,7 +265,7 @@ StatusType Statistics::GetTopApp(int versionCode, int *appId) {
 }
 
 StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *numOfApps) {
-    if (apps == NULL || numOfApps == NULL) {
+    if (versionCode <= 0 || apps == NULL || numOfApps == NULL) {
         return INVALID_INPUT;
     }
 
@@ -219,9 +282,9 @@ StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *n
 
     } else {
         // User wants all apps with a specific versionCode by downloads - Traverse
-        // the tree inside the relevant node in mOSVersions
+        // the tree inside the relevant node in mOSVersionsList
         try {
-            tree = mOSVersions.getAppsByDownloadCountTree(versionCode);
+            tree = mOSVersionsList.getAppsByDownloadCountTree(versionCode);
         } catch (const InvalidVersionCodeException& e) {
             return INVALID_INPUT;
         } catch (const NoSuchVersionCodeException& e) {
@@ -230,8 +293,6 @@ StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *n
         }
     }
 
-    // TODO: Export the rest of the code of this function into a function
-    // of AppsByDownloadCountTree
 
     // Now that we got our tree:
 
@@ -244,12 +305,14 @@ StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *n
     }
 
     // Enumerate the tree's data into an array
-    // Allocate array using malloc() because the user uses free() later
-    AppData** appDataArray = (AppData**) malloc(sizeof(AppData**) * treeSize);
-    if (appDataArray == NULL) {
+    AppsListIterator* appDataItersArray = NULL;
+    try {
+        appDataItersArray = new AppsListIterator[treeSize];
+    } catch (const std::bad_alloc& e) {
         return ALLOCATION_ERROR;
     }
-    tree.enumerateData(*appDataArray);
+
+    tree.enumerateData(appDataItersArray);
 
 
     // We need to extract the data we want from the AppData pointers array
@@ -258,17 +321,17 @@ StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *n
     int* appIdsArray = (int*) malloc(sizeof(int) * treeSize);
     if (appIdsArray == NULL) {
         // Cleanup previously allocated array
-        free(appDataArray);
+        delete[] appDataItersArray;
         return ALLOCATION_ERROR;
     }
 
     for (int i=0; i<treeSize; i++) {
         // NOTE: We trust enumerateData() here in that all the elements in
         // the array it returned are valid pointers
-        appIdsArray[i] = appDataArray[i]->appId;
+        appIdsArray[i] = appDataItersArray[i]->appId;
     }
 
-    free(appDataArray);
+    delete[] appDataItersArray;
 
     // Got everything we need, return it to the user
     *numOfApps = treeSize;
