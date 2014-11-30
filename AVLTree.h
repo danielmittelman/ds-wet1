@@ -387,7 +387,7 @@ private:
     	return node;
     }
 
-    int calculateTreeSize(int currentSize, AVLNode node) {
+    int calculateTreeSize(int currentSize, AVLNode node) const {
     	if(currentSize < 0 || IS_NULL(node)) {
     		return 0;
     	}

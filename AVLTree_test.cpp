@@ -60,7 +60,7 @@ public:
 private:
 	// Key-data comparison function. In this example, the key is considered equal to the data
 	// if the key field inside data is equal to key
-	virtual int predKeyData(int& key, CompoundData& data) const {
+	virtual int predKeyData(const int& key, const CompoundData& data) const {
 		if(key > data.id) return 1;
 		if(key < data.id) return -1;
 
@@ -69,7 +69,7 @@ private:
 
 	// Data-data comparison function. In this example, the nodes are to be sorted
 	// by id, then by letter
-	virtual int predDataData(CompoundData& data, CompoundData& other) const {
+	virtual int predDataData(const CompoundData& data, const CompoundData& other) const {
 		if(data.id > other.id) return 1;
 		if(data.id < other.id) return -1;
 
