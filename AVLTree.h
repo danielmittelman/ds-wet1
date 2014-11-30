@@ -62,7 +62,7 @@ public:
 	 * exception if a node with a duplicate key is identified
 	 * @throws DuplicateNodeException if a node with the provided key already exists
 	 */
-    void insert(SearchType& key, DataType& data) {
+    void insert(const SearchType& key, const DataType& data) {
     	root = recursiveInsert(root, key, data);
     }
 
@@ -70,7 +70,7 @@ public:
      * Removes a data element from the tree.
      * @throws ElementNotFoundException if an element with the provided key was not found
      */
-    void remove(SearchType& key) {
+    void remove(const SearchType& key) {
     	root = recursiveRemove(root, key);
     }
 
@@ -78,7 +78,7 @@ public:
      * Dumps the tree into a sorted array.
      * @return The size of the array that was used
      */
-    int enumerateData(DataType array[]) {
+    int enumerateData(DataType array[]) const {
     	NULL_CHECK(array);
     	int beginIndex = 0;
 
@@ -91,7 +91,7 @@ public:
      * Any other array (unsorted or being of a different size) will result in a failure
      * and no exception will be thrown.
      */
-    void arrayFillTree(DataType array[]) {
+    void arrayFillTree(const DataType array[]) {
     	NULL_CHECK(array);
     	int beginIndex = 0;
 
@@ -102,7 +102,7 @@ public:
      * Returns the data of an element with the provided key.
      * @throws ElementNotFoundException when no element with the provided key was found
      */
-    DataType* findBySearchKey(SearchType& key) {
+    DataType* findBySearchKey(const SearchType& key) const {
     	NULL_CHECK(key);
     	return &(binarySearch(root, key)->data);
     }
@@ -111,7 +111,7 @@ public:
      * Returns the max data element in the tree, being the right-lower-most element.
      * @throws ElementNotFoundException when the tree is completely empty
      */
-    DataType* getMax() {
+    DataType* getMax() const {
     	if(IS_NULL(root)) {
     		throw ElementNotFoundException();
     	}
