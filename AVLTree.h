@@ -12,16 +12,18 @@
 #define MAX(a,b) (((a)>(b)) ? (a) : (b))
 
 #include <cstdlib>
+#include <exception>
 
 // TODO remove
 #include <iostream>
 
 
+using std::exception;
+
 /* Exception classes */
-class AVLTreeException {};
-class NullArgumentException : public AVLTreeException {};
-class ElementNotFoundException : public AVLTreeException {};
-class DuplicateNodeException : public AVLTreeException {};
+class NullArgumentException : public exception {};
+class ElementNotFoundException : public exception {};
+class DuplicateNodeException : public exception {};
 
 
 template<typename SearchType, typename DataType>
@@ -42,7 +44,6 @@ struct AVLNodeStruct {
 template<typename SearchType, typename DataType>
 class AVLTree {
 public:
-
 	typedef AVLTree<SearchType, DataType> ThisType;
 	typedef AVLNodeStruct<SearchType, DataType> *AVLNode;
 
