@@ -55,19 +55,19 @@ StatusType Statistics::AddApplication(int appId, int versionCode, int downloadCo
 		AppData appData(appId, versionCode, downloadCount);
 		AppsListIterator appDataIter = mAppsList.insertFront(appData);
 
-		// 2. Insert a pointer to the new app to mOSVersionsList
+		// 2. Insert new app to mAppsById and mAppsByDownloadCount
 		try {
-			mOSVersionsList.addApp(appDataIter);
+			mAppsById.addApp(appDataIter);
 		} catch (const exception& e) {
 			mAppsList.remove(appDataIter);
 			throw;
 		}
 
-		// 3. Insert new app to mAppsById and mAppsByDownloadCount
+		// 3. Insert a pointer to the new app to mOSVersionsList
 		try {
-			mAppsById.addApp(appDataIter);
+			mOSVersionsList.addApp(appDataIter);
 		} catch (const exception& e) {
-			mOSVersionsList.removeApp(versionCode, appId);
+			mAppsById.removeApp(appId);
 			mAppsList.remove(appDataIter);
 			throw;
 		}
@@ -92,9 +92,17 @@ StatusType Statistics::AddApplication(int appId, int versionCode, int downloadCo
 		return ALLOCATION_ERROR;
 	} catch (const InvalidVersionCodeException& e) {
 		return INVALID_INPUT;
+	} catch (const NullArgumentException& e) {
+		return INVALID_INPUT;
 	} catch (const NoSuchVersionCodeException& e) {
 		return FAILURE;
 	} catch (const AppAlreadyExistsException& e) {
+		return FAILURE;
+	} catch (const DuplicateNodeException& e) {
+		return FAILURE;
+	} catch (const ElementNotFoundException& e) {
+		return FAILURE;
+	} catch (...) {
 		return FAILURE;
 	}
 
@@ -234,7 +242,7 @@ StatusType Statistics::UpgradeApplication(int appId) {
 }
 
 StatusType Statistics::GetTopApp(int versionCode, int *appId) {
-	if (versionCode <= 0 || appId == NULL) {
+	if (versionCode == 0 || appId == NULL) {
 		return INVALID_INPUT;
 	}
 
@@ -268,7 +276,7 @@ StatusType Statistics::GetTopApp(int versionCode, int *appId) {
 }
 
 StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *numOfApps) {
-	if (versionCode <= 0 || apps == NULL || numOfApps == NULL) {
+	if (versionCode == 0 || apps == NULL || numOfApps == NULL) {
 		return INVALID_INPUT;
 	}
 
