@@ -43,11 +43,27 @@ public:
         // Constructor from node pointer
         Iterator(Node* node) : mNode(node) {};
 
+        Iterator operator++() {
+            if (mNode == NULL) {
+                return *this;
+            }
+
+            Node* oldPtr = mNode;
+            mNode = mNode->next;
+            return Iterator(oldPtr);
+        }
+
         // Getters for the data
         ValueType* operator*() {
+            if (mNode == NULL) {
+                throw InvalidIteratorException();
+            }
             return mNode->data;
         }
         ValueType* operator->() {
+            if (mNode == NULL) {
+                throw InvalidIteratorException();
+            }
             return mNode->data;
         }
 
@@ -153,12 +169,20 @@ public:
 
     // Get the first element
     // Time complexity: O(1)
-    // Throws NoSuchNodeException
-    virtual Iterator getFront() const {
+    // Throws InvalidIteratorException
+    virtual Iterator begin() const {
         if (isEmpty()) {
-            throw NoSuchNodeException();
+            throw InvalidIteratorException();
         }
         return Iterator(mHead);
+    }
+
+    // Iterator end() function for iterating over the list
+    // Return the value that an iterator gets after being incremented past
+    // the last element of the list
+    // Time complexity: O(1)
+    virtual Iterator end() const {
+        return Iterator(NULL);
     }
 
     // Get the first element

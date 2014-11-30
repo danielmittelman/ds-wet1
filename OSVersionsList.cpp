@@ -15,7 +15,7 @@ void OSVersionsList::addVersion(int versionCode) {
 
     // First make sure that the versionCode is indeed larger than the largest
     // versionCode we currently have
-    if ( (!isEmpty()) && (getFront()->versionCode >= versionCode) ) {
+    if ( (!isEmpty()) && (begin()->versionCode >= versionCode) ) {
         throw VersionCodeNotLargerThanCurrentException();
     }
 

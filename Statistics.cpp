@@ -4,10 +4,12 @@
 /*                                                                          */
 /****************************************************************************/
 
+#include "Statistics.h"
+
 #include <cstdlib>                          // NULL definition
 #include <new>                              // bad_alloc definition
-#include <exception>
-#include "Statistics.h"
+
+#include "AppsByDownloadCountTree.h"
 
 
 using std::bad_alloc;
@@ -342,57 +344,116 @@ StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *n
 }
 
 StatusType Statistics::UpdateDownloads(int groupBase, int multiplyFactor) {
-	// Check argument validity
 	if (groupBase < 1 || multiplyFactor <= 0) {
-		return INVALID_INPUT;
+        return INVALID_INPUT;
+    }
+
+	try {
+
+		// Update the complete tree and actually modify the download counters
+		doUpdateDownloadsInTree(&(mAppsByDownloadCount), groupBase,
+                multiplyFactor, true);
+
+		// Update the k OSVersion trees, this time not updating the actual data
+		for (OSVersionsList::Iterator it = mOSVersionsList.begin();
+                it != mOSVersionsList.end(); i++) {
+
+			AppsByDownloadCountTree* tree =
+                    mOSVersionsList.getAppsByDownloadCountTree(it->versionCode);
+			doUpdateDownloadsInTree(tree, groupBase, multiplyFactor, false);
+		}
+
+	} catch(std::bad_alloc& e) {
+		return ALLOCATION_ERROR;
 	}
 
-	// Dump the AppsByDownloadCountTree into an array
-    int treeSize = mAppsByDownloadCount.getTreeSize();
+	return SUCCESS;
+}
+
+
+void doUpdateDownloadsInTree(AppsByDownloadCountTree* tree, int groupBase,
+        int multiplyFactor, bool shouldUpdateValues) {
+
+    if (groupBase < 1 || multiplyFactor <= 0) {
+        return INVALID_INPUT;
+    }
+
+    // Dump the AppsByDownloadCountTree into an array
+    int treeSize = tree->getTreeSize();
     AppsListIterator* apps = NULL;
     try {
         apps = new AppsListIterator[treeSize];
     } catch (const std::bad_alloc& e) {
         return ALLOCATION_ERROR;
     }
-	int arraySize = mAppsByDownloadCount.enumerateData(apps);
+    int arraySize = tree->enumerateData(apps);
 
-	// Create two stacks using DoubleLinkedLists, one for holding the elements that
-	// were will not be modified and the second for storing only modified elements. Both stacks
-	// will already be sorted, as the original array is sorted.
-	AppsStack stack1;
-	AppsStack stack2;
+    // Create two stacks using DoubleLinkedLists, one for holding the elements that
+    // were will not be modified and the second for storing only modified elements. Both stacks
+    // will already be sorted, as the original array is sorted.
+    AppsStack stack1;
+    AppsStack stack2;
 
-	// Increase the download count for each application that is associated
-	// with the provided groupBase
-	for (int i = 0 ; i < arraySize ; i++) {
-		if (apps[i]->appId % groupBase == 0) {
-			apps[i]->downloadCount *= multiplyFactor;
-			stack1.insertFront(apps[i]);
-		} else {
-			stack2.insertFront(apps[i]);
-		}
-	}
+    // Increase the download count for each application that is associated
+    // with the provided groupBase and push into one of the stack in reverse,
+    // so that at the end the head element in both stacks will be the lowest
+    for (int i = (arraySize - 1) ; i >= 0 ; i--) {
+        if (apps[i]->appId % groupBase == 0) {
+            // Update the actual downloadCount values only if
+            // shouldUpdateValues is true, otherwise assume the values have
+            // already been updated and rearrange the tree
+            if (shouldUpdateValues) {
+                apps[i]->downloadCount *= multiplyFactor;
+            }
+            stack1.insertFront(apps[i]);
+        } else {
+            stack2.insertFront(apps[i]);
+        }
+    }
 
-	// Reuse the allocated array to merge the stacks, creating a sorted array
-	int dlCount1, dlCount2;
-	for(int i=0 ; i<arraySize ; i++) {
+    // Reuse the allocated array to merge the stacks, creating a sorted array
+    for (int i = 0 ; i < arraySize ; i++) {
+        // Get the download count from the top element in both stacks
+        // Select the next stack from which to pop into apps by the element
+        // with the lowest download count. If download counts are equal, select
+        // the element with highest id.
+        AppsStackPtr* nextAppsStackToPopFrom = NULL;
 
-		try {
-			dlCount1 = ( *(stack1.getFront()) )->downloadCount;
-		} catch (const NoSuchNodeException& e) {
-			dlCount1 = -1;
-		}
+        if (stack1.isEmpty()) {
+            nextAppsStackToPopFrom = &stack2;
+        } else if (stack2.isEmpty()) {
+            nextAppsStackToPopFrom = &stack1;
+        } else {
+            int dlCount1 = stack1.begin()->downloadCount;
+            int appId1 = stack1.begin()->appId;
 
-	}
+            int dlCount2 = stack2.begin()->downloadCount;
+            int appId2 = stack2.begin()->appId;
 
-    // Cleanup
+            if (dlCount1 < dlCount2) {
+                nextAppsStackToPopFrom = &stack1;
+            } else if (dlCount1 > dlCount2) {
+                nextAppsStackToPopFrom = &stack2;
+            } else {
+                // Both elements have the same download count, compare by app ID
+                if (appId1 > appId2) {
+                    nextAppsStackToPopFrom = &stack1;
+                } else {
+                    nextAppsStackToPopFrom = &stack2;
+                }
+            }
+        }
+
+        // Pop from nextAppsStackToPopFrom into apps
+        apps[i] = *(nextAppsStackToPopFrom->begin());
+        nextAppsStackToPopFrom->removeFront();
+    }
+
+    // Restore the array into the tree
+    tree->arrayFillTree(apps);
+
+    // Make sure everything's deallocated
     delete[] apps;
-
-	// TODO Refactor with new list iterator
-
-    throw exception();
-    return SUCCESS;
+    delete stack1;
+    delete stack2;
 }
-
-

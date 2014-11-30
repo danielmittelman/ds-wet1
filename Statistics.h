@@ -50,6 +50,10 @@ private:
     // globalTopAppId will be INVALID_TOP_APP_ID if there are no apps
     int mTopAppId;
     int mTopAppDownloadCount;
+
+    // Helper function for updating downloads in an AppsByDownloadCountTree.
+    void doUpdateDownloadsInTree(AppsByDownloadCountTree* tree, int groupBase,
+            int multiplyFactor, bool shouldUpdateValues);
 };
 
 #endif    /* _234218_WET1_STATISTICS_H_ */
