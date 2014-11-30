@@ -27,5 +27,6 @@ struct AppData {
 typedef DoubleLinkedList<AppData> AppsList;
 typedef AppsList::Iterator AppsListIterator;
 
+typedef DoubleLinkedList<AppsListIterator> AppsStack;
 
 #endif    /* _234218_WET1_COMMON_H_ */

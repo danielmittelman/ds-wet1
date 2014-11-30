@@ -343,24 +343,30 @@ StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *n
 
 StatusType Statistics::UpdateDownloads(int groupBase, int multiplyFactor) {
 	// Check argument validity
-	if(groupBase < 1 || multiplyFactor <= 0) {
+	if (groupBase < 1 || multiplyFactor <= 0) {
 		return INVALID_INPUT;
 	}
 
 	// Dump the AppsByDownloadCountTree into an array
-	AppListIterator apps[mAppsByDownloadCount.getTreeSize()];
+    int treeSize = mAppsByDownloadCount.getTreeSize();
+    AppsListIterator* apps = NULL;
+    try {
+        apps = new AppsListIterator[treeSize];
+    } catch (const std::bad_alloc& e) {
+        return ALLOCATION_ERROR;
+    }
 	int arraySize = mAppsByDownloadCount.enumerateData(apps);
 
 	// Create two stacks using DoubleLinkedLists, one for holding the elements that
 	// were will not be modified and the second for storing only modified elements. Both stacks
 	// will already be sorted, as the original array is sorted.
-	AppStack stack1 = AppStack();
-	AppStack stack2 = AppStack();
+	AppsStack stack1;
+	AppsStack stack2;
 
 	// Increase the download count for each application that is associated
 	// with the provided groupBase
-	for(int i = 0 ; i < arraySize ; i++) {
-		if(apps[i]->appId % groupBase == 0) {
+	for (int i = 0 ; i < arraySize ; i++) {
+		if (apps[i]->appId % groupBase == 0) {
 			apps[i]->downloadCount *= multiplyFactor;
 			stack1.insertFront(apps[i]);
 		} else {
@@ -370,15 +376,18 @@ StatusType Statistics::UpdateDownloads(int groupBase, int multiplyFactor) {
 
 	// Reuse the allocated array to merge the stacks, creating a sorted array
 	int dlCount1, dlCount2;
-	for(int i = 0 ; i < arraySize ; i++) {
+	for(int i=0 ; i<arraySize ; i++) {
 
 		try {
-			dlCount1 = stack1.getFront()->downloadCount;
-		} catch (exception& e) {
-			dlCount = -1;
+			dlCount1 = ( *(stack1.getFront()) )->downloadCount;
+		} catch (const NoSuchNodeException& e) {
+			dlCount1 = -1;
 		}
+
 	}
 
+    // Cleanup
+    delete[] apps;
 
 	// TODO Refactor with new list iterator
 
