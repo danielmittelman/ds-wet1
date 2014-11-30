@@ -9,12 +9,24 @@
 
 #include <exception>
 #include "DoubleLinkedList.h"
+#include "AppsByDownloadCountTree.h"
 #include "common.h"
 
 using std::exception;
 
 
-struct OSVersionsData {
+const int INVALID_VERSION_TOP_APP_ID = -1;
+
+
+// Exception classes
+class InvalidVersionCodeException : public exception {};
+class VersionCodeNotLargerThanCurrentException : public exception {};
+class NoSuchVersionCodeException : public exception {};
+class NoSuchAppException : public exception {};
+class AppAlreadyExistsException : public exception {};
+
+
+struct OSVersionData {
     int versionCode;
     AppsByDownloadCountTree versionAppsByDownloadCount;
 
@@ -24,7 +36,7 @@ struct OSVersionsData {
 
     // Constructor for this struct, to make sure that the top app fields
     // are initialized correctly
-    OSVersionsData(int versionCode) :
+    OSVersionData(int versionCode) :
             versionCode(versionCode),
             versionAppsByDownloadCount(),
             versionTopAppId(INVALID_VERSION_TOP_APP_ID),
@@ -34,7 +46,7 @@ struct OSVersionsData {
 
 };
 
-class OSVersionsList: public DoubleLinkedList< OSVersionsData > {
+class OSVersionsList: public DoubleLinkedList< OSVersionData > {
 public:
     // Using default constructor
 
@@ -63,7 +75,7 @@ public:
     // Throws NoSuchVersionCodeException if is no such versionCode in the list
     // Throws AppAlreadyExistsException if the app already exists in the
     // version's versionAppsByDownloadCount tree
-    void addApp(const AppData* appDataPtr);
+    void addApp(const AppsListIterator& appDataPtr);
 
     // Removes an app from the data structue. Must receive the app's
     // versionCode because apps are indexed by versionCode
@@ -91,28 +103,17 @@ public:
     // Throws NoSuchVersionCodeException if is no such versionCode in the list
     AppsByDownloadCountTree* getAppsByDownloadCountTree(int versionCode) const;
 
-
-    // Exception classes
-    class InvalidVersionCodeException : public exception {};
-    class VersionCodeNotLargerThanCurrentException : public exception {};
-    class NoSuchVersionCodeException : public exception {};
-    class NoSuchAppException : public exception {};
-    class AppAlreadyExistsException : public exception {};
-
 private:
-    enum {
-        INVALID_VERSION_TOP_APP_ID = -1;
-    };
-
     // Helper function to get the OSVersionData of a specific versionCode
     // Throws InvalidVersionCodeException if the given versionCode is <= 0
     // Throws NoSuchVersionCodeException if is no such versionCode in the list
-    OSVersionData* getOSVersionDataByVersionCode(int versionCode);
+    OSVersionData* getOSVersionDataByVersionCode(int versionCode) const;
 
 
     // Predicate to be used with getDataByPredicate
     class FilterByVersionCodePredicate {
-        bool operator() (const OSVersionsData& data, void* versionCode) const;
+    public:
+        bool operator() (const OSVersionData* dataPtr, void* versionCode) const;
     };
 };
 

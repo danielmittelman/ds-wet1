@@ -8,7 +8,7 @@
 #include "OSVersionsList.h"
 
 
-void OSVersionList::addVersion(int versionCode) {
+void OSVersionsList::addVersion(int versionCode) {
     if (versionCode <= 0) {
         throw InvalidVersionCodeException();
     }
@@ -21,32 +21,32 @@ void OSVersionList::addVersion(int versionCode) {
 
     // The new versionCode is good, allocate a new struct with it and
     // insert it into the list
-    OSVersionsData data(versionCode);
+    OSVersionData data(versionCode);
     insertFront(data);
 }
 
-int OSVersionList::getTopAppId(int versionCode) {
+int OSVersionsList::getTopAppId(int versionCode) const {
     // Search for the OSVersionData node with the relevant versionCode
     // (an exception will be thrown if it is not found)
-    OSVersionsData* data = getOSVersionDataByVersionCode(versionCode);
+    OSVersionData* data = getOSVersionDataByVersionCode(versionCode);
 
     // Found our node, return the top app if there is one
-    if (data->versionTopAppId == INVALID_VERSION_TOP_APP) {
+    if (data->versionTopAppId == INVALID_VERSION_TOP_APP_ID) {
         throw NoSuchAppException();
     }
 
     return data->versionTopAppId;
 }
 
-void OSVersionList::addApp(const AppsListIterator& appDataPtr) {
+void OSVersionsList::addApp(const AppsListIterator& appDataPtr) {
     // Search for the OSVersionData node with the relevant versionCode
     // (an exception will be thrown if it is not found)
-    OSVersionsData* data = getOSVersionDataByVersionCode(versionCode);
+    OSVersionData* data = getOSVersionDataByVersionCode(appDataPtr->versionCode);
 
     // Found our node, add the app to the versionAppsByDownloadCount tree in it
     try {
-        data->versionAppsByDownloadCount.insert(appDataPtr);
-    } catch (const AppsByDownloadCountTree.KeyAlreadyExistsException& e) {
+        data->versionAppsByDownloadCount.addApp(appDataPtr);
+    } catch (const DuplicateNodeException& e) {
         throw AppAlreadyExistsException();
     }
 
@@ -62,10 +62,10 @@ void OSVersionList::addApp(const AppsListIterator& appDataPtr) {
     }
 }
 
-void OSVersionList::removeApp(int versionCode, int appId) {
+void OSVersionsList::removeApp(int versionCode, int appId) {
     // Search for the OSVersionData node with the relevant versionCode
     // (an exception will be thrown if it is not found)
-    OSVersionsData* data = getOSVersionDataByVersionCode(versionCode);
+    OSVersionData* data = getOSVersionDataByVersionCode(versionCode);
 
     // Found our node, remove the app from the versionAppsByDownloadCount tree
     // in it
@@ -73,14 +73,15 @@ void OSVersionList::removeApp(int versionCode, int appId) {
         // TODO: The remove function currently receives a key, if the way we
         // represent it doesn't change we need to use a key that contains
         // both the downloadCount and the appId (for collisions)
-        data->versionAppsByDownloadCount.remove(appId);
-    } catch (const AppsByDownloadCountTree.NoSuchKeyException& e) {
+        data->versionAppsByDownloadCount.removeApp(versionCode, appId);
+    } catch (const ElementNotFoundException& e) {
         throw NoSuchAppException();
     }
 
     // App was successfully removed, don't forget to update
     // versionTopAppId and versionTopAppDownloadCount if needed
-    OSVersionsData* newTopApp = data->getMax();
+    AppsListIterator* newTopAppPtr = data->versionAppsByDownloadCount.getMax();
+    AppsListIterator newTopApp = *newTopAppPtr;
     if (data->versionTopAppDownloadCount < newTopApp->downloadCount) {
         data->versionTopAppDownloadCount = newTopApp->downloadCount;
         data->versionTopAppId = newTopApp->appId;
@@ -89,7 +90,7 @@ void OSVersionList::removeApp(int versionCode, int appId) {
 
 // Throws NoSuchVersionCodeException if is no such versionCode in the list,
 // or there is no versionCode in the list which is larger than the given one
-int OSVersionList::getFollowingVersion(int versionCode) const {
+int OSVersionsList::getFollowingVersion(int versionCode) const {
     if (versionCode <= 0) {
         throw InvalidVersionCodeException();
     }
@@ -99,7 +100,7 @@ int OSVersionList::getFollowingVersion(int versionCode) const {
 
     Node* p = mHead;
     while (p) {
-        if (predicate(p->data, versionCode)) {
+        if (predicate(p->data, (void*) versionCode)) {
             // Found it - Return the previous node's versionCode
             if (p->prev) {
                 return p->prev->data->versionCode;
@@ -113,26 +114,28 @@ int OSVersionList::getFollowingVersion(int versionCode) const {
     }
 
     // Given versionCode is not in the list
-    throw NoSuchVersionCodeException()
+    throw NoSuchVersionCodeException();
 }
 
-AppsByDownloadCountTree* getAppsByDownloadCountTree(int versionCode) const {
+AppsByDownloadCountTree* OSVersionsList::getAppsByDownloadCountTree(int versionCode) const {
     // Search for the OSVersionData node with the relevant versionCode
     // (an exception will be thrown if it is not found)
-    OSVersionsData* data = getOSVersionDataByVersionCode(versionCode);
+    OSVersionData* data = getOSVersionDataByVersionCode(versionCode);
     return &(data->versionAppsByDownloadCount);
 }
 
 
-OSVersionData* OSVersionList::getOSVersionDataByVersionCode(int versionCode) {
+// Private:
+
+OSVersionData* OSVersionsList::getOSVersionDataByVersionCode(int versionCode) const {
     if (versionCode <= 0) {
         throw InvalidVersionCodeException();
     }
 
     // Search for the node with the relevant versionCode
-    OSVersionsData* data = NULL;
+    OSVersionData* data = NULL;
     try {
-        data = getDataByPredicate(FilterByVersionCodePredicate(), versionCode);
+        data = getDataByPredicate(FilterByVersionCodePredicate(), (void*) versionCode);
     } catch (const NoSuchNodeException& e) {
         throw NoSuchVersionCodeException();
     }
@@ -140,9 +143,9 @@ OSVersionData* OSVersionList::getOSVersionDataByVersionCode(int versionCode) {
     return data;
 }
 
-bool OSVersionList::FilterByVersionCodePredicate::operator()
-        (const OSVersionsData& data, void* versionCode) const {
+bool OSVersionsList::FilterByVersionCodePredicate::operator()
+        (const OSVersionData* dataPtr, void* versionCode) const {
 
     int versionCodeInt = (int) versionCode;
-    return (data->versionCode == versionCodeInt);
+    return (dataPtr->versionCode == versionCodeInt);
 }

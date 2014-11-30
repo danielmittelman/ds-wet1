@@ -58,7 +58,7 @@ StatusType UpgradeApplication(void *DS, int appID) {
 
 StatusType GetTopApp(void *DS, int versionCode, int *appID) {
     RETURN_INVALID_INPUT_IF_NULL(DS);
-    return ((Statistics*)DS)->GetTopApp(appID, versionCode, appID);
+    return ((Statistics*)DS)->GetTopApp(versionCode, appID);
 }
 
 StatusType GetAllAppsByDownloads(void *DS, int versionCode, int **apps, int *numOfApps) {

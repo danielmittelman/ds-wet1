@@ -62,7 +62,7 @@ public:
 	 * exception if a node with a duplicate key is identified
 	 * @throws DuplicateNodeException if a node with the provided key already exists
 	 */
-    void insert(SearchType& key, DataType& data) {
+    void insert(const SearchType& key, const DataType& data) {
     	root = recursiveInsert(root, key, data);
     }
 
@@ -70,7 +70,7 @@ public:
      * Removes a data element from the tree.
      * @throws ElementNotFoundException if an element with the provided key was not found
      */
-    void remove(SearchType& key) {
+    void remove(const SearchType& key) {
     	root = recursiveRemove(root, key);
     }
 
@@ -102,7 +102,7 @@ public:
      * Returns the data of an element with the provided key.
      * @throws ElementNotFoundException when no element with the provided key was found
      */
-    DataType* findBySearchKey(SearchType& key) {
+    DataType* findBySearchKey(const SearchType& key) const {
     	NULL_CHECK(key);
     	return &(binarySearch(root, key)->data);
     }
@@ -111,7 +111,7 @@ public:
      * Returns the max data element in the tree, being the right-lower-most element.
      * @throws ElementNotFoundException when the tree is completely empty
      */
-    DataType* getMax() {
+    DataType* getMax() const {
     	if(IS_NULL(root)) {
     		throw ElementNotFoundException();
     	}
@@ -281,7 +281,7 @@ private:
 
     /* Internal helper recursive functions */
 
-    AVLNode recursiveInsert(AVLNode node, SearchType& key, DataType& data) {
+    AVLNode recursiveInsert(AVLNode node, const SearchType& key, const DataType& data) {
     	// If node is null, the algorithm has reached the insertion location. Create and return
     	if(IS_NULL(node)) {
     		AVLNode newNode = new AVLNodeStruct<SearchType, DataType>();
@@ -309,7 +309,7 @@ private:
     	return balanceNode(node);
     }
 
-    AVLNode recursiveRemove(AVLNode node, SearchType& searchKey) {
+    AVLNode recursiveRemove(AVLNode node, const SearchType& searchKey) {
     	if(IS_NULL(node)) {
     		throw ElementNotFoundException();
     	}
@@ -359,7 +359,7 @@ private:
     	return balanceNode(node);
     }
 
-    AVLNode binarySearch(AVLNode node, SearchType& searchKey) {
+    AVLNode binarySearch(const AVLNode node, const SearchType& searchKey) const {
     	if(predKeyData(searchKey, node->data) == 0) {
     		return node;
     	}
@@ -379,7 +379,7 @@ private:
     	}
     }
 
-    AVLNode findMax(AVLNode node) {
+    AVLNode findMax(const AVLNode node) const {
     	if(!IS_NULL(node->right)) {
     		return findMax(node->right);
     	}

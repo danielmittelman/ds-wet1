@@ -15,13 +15,28 @@ using std::bad_alloc;
 using std::exception;
 
 
+// Exception classes
+class NoSuchNodeException : public exception {};
+class InvalidIteratorException : public exception {};
+
+
 template<typename ValueType>
 class DoubleLinkedList {
 public:
+
+    // Define the internal Node structure
+    struct Node {
+        ValueType* data;
+        Node* next;
+        Node* prev;
+    };
+
     // Define an iterator class, to be returned on insert and which can
     // be provided to remove (among other things).
     class Iterator {
     public:
+        friend class DoubleLinkedList<ValueType>;
+
         // Default constructor - Creates an invalid Iterator
         Iterator() : mNode(NULL) {};
 
@@ -33,6 +48,14 @@ public:
             return mNode->data;
         }
         ValueType* operator->() {
+            return mNode->data;
+        }
+
+        // Const getters for the data
+        const ValueType* operator*() const {
+            return mNode->data;
+        }
+        const ValueType* operator->() const {
             return mNode->data;
         }
 
@@ -94,13 +117,38 @@ public:
 
         Node* nextNode = mHead->next;
         // Free the front node:
-        // Free data
         delete mHead->data;
-        // Free the node struct itself
         delete mHead;
 
         // Update mHead
         mHead = nextNode;
+    }
+
+    // Remove the element pointed by the given iterator
+    // Time complexity: O(1)
+    virtual void remove(const Iterator& iter) {
+        if (iter.mNode == NULL) {
+            throw InvalidIteratorException();
+        }
+
+        Node* prevNode = iter.mNode->prev;
+        if (prevNode == NULL) {
+            prevNode = mHead;
+        }
+
+        Node* nextNode = iter.mNode->next;
+
+        // Rewire prevNode's next pointer to nextNode
+        prevNode->next = nextNode;
+        // Rewire nextNode's prev pointer to prevNode (unless our node is
+        // actually last in the list)
+        if (nextNode != NULL) {
+            nextNode->prev = prevNode;
+        }
+
+        // Finally, free our node
+        delete mHead->data;
+        delete mHead;
     }
 
     // Get the first element
@@ -148,16 +196,7 @@ public:
     }
 
 
-    // Exception classes
-    class NoSuchNodeException : public exception {};
-
 protected:
-    struct Node {
-        ValueType* data;
-        Node* next;
-        Node* prev;
-    };
-
     Node* mHead;
     unsigned int mSize;
 };

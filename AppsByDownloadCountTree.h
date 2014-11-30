@@ -17,7 +17,7 @@ struct DownloadCountAndId {
     int downloadCount;
 
     // Constructor for this struct, for simpler initialization
-    DownloadCountAndId(int appId, downloadCount) :
+    DownloadCountAndId(int appId, int downloadCount) :
             appId(appId),
             downloadCount(downloadCount) {}
 };

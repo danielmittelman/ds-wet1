@@ -15,11 +15,6 @@
 #include "AppsByIdTree.h"
 
 
-// Define AppsList - A list of AppData
-typedef DoubleLinkedList<AppData> AppsList;
-typedef AppsList::Iterator AppsListIterator;
-
-
 class Statistics {
 public:
     Statistics();
@@ -44,7 +39,7 @@ public:
 
 private:
     enum {
-        INVALID_TOP_APP_ID = -1;
+        INVALID_TOP_APP_ID = -1
     };
 
     AppsList mAppsList;
