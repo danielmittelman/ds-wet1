@@ -56,10 +56,10 @@ public:
 
         // Comparison operators
         bool operator==(const Iterator& other) {
-            return mNode == other.mNode;
+            return (mNode == other.mNode);
         }
         bool operator!=(const Iterator& other) {
-            return (! ((*this) == other));
+            return (! ((*this) == other) );
         }
 
 		// Getters for the data
@@ -145,8 +145,9 @@ public:
 		delete mHead->data;
 		delete mHead;
 
-		// Update mHead
+		// Update mHead and mSize
 		mHead = nextNode;
+		mSize--;
 	}
 
 	// Remove the element pointed by the given iterator
@@ -174,15 +175,16 @@ public:
 		// Finally, free our node
 		delete mHead->data;
 		delete mHead;
+
+		// Update mHead and mSize
+		mHead = nextNode;
+		mSize--;
 	}
 
 	// Get the first element
 	// Time complexity: O(1)
 	// Throws InvalidIteratorException
 	virtual Iterator begin() const {
-		if (isEmpty()) {
-			throw InvalidIteratorException();
-		}
 		return Iterator(mHead);
 	}
 

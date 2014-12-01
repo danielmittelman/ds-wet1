@@ -70,9 +70,6 @@ void OSVersionsList::removeApp(int versionCode, int appId) {
 	// Found our node, remove the app from the versionAppsByDownloadCount tree
 	// in it
 	try {
-		// TODO: The remove function currently receives a key, if the way we
-		// represent it doesn't change we need to use a key that contains
-		// both the downloadCount and the appId (for collisions)
 		data->versionAppsByDownloadCount.removeApp(versionCode, appId);
 	} catch (const ElementNotFoundException& e) {
 		throw NoSuchAppException();
