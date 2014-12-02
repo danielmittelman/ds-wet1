@@ -84,9 +84,9 @@ public:
 			return mNode->data;
 		}
 
-		Node* mNode;
 	private:
 		// Pointer to node. If mNode is NULL the iterator is considered invalid
+		Node* mNode;
 	};
 
 
