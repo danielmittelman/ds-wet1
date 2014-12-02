@@ -152,6 +152,10 @@ OSVersionData* OSVersionsList::getOSVersionDataByVersionCode(int versionCode) co
 bool OSVersionsList::FilterByVersionCodePredicate::operator()
 		(const OSVersionData* dataPtr, void* versionCode) const {
 
-	int versionCodeInt = (int) versionCode;
+	// NOTE: Using "long int" here because on 64-bit machines it is
+	// not possible to convert void* into int. If we try this we get:
+	// error: cast from ‘void*’ to ‘int’ loses precision
+
+	long int versionCodeInt = (long int) versionCode;
 	return (dataPtr->versionCode == versionCodeInt);
 }
