@@ -158,20 +158,22 @@ public:
 
 	// Remove the element pointed by the given iterator
 	// Time complexity: O(1)
-	virtual void remove(const Iterator& iter) {
+	virtual void remove(Iterator& iter) {
 		if (iter.mNode == NULL) {
 			throw InvalidIteratorException();
 		}
 
 		Node* prevNode = iter.mNode->prev;
-		if (prevNode == NULL) {
-			prevNode = mHead;
-		}
-
 		Node* nextNode = iter.mNode->next;
 
-		// Rewire prevNode's next pointer to nextNode
-		prevNode->next = nextNode;
+		// Rewire prevNode's next pointer (or mHead in the case that iter points
+		// to the first element in the list) to nextNode
+		if (prevNode != NULL) {
+			prevNode->next = nextNode;
+		} else {
+			mHead = nextNode;
+		}
+
 		// Rewire nextNode's prev pointer to prevNode (unless our node is
 		// actually last in the list)
 		if (nextNode != NULL) {
@@ -179,11 +181,11 @@ public:
 		}
 
 		// Finally, free our node
-		delete mHead->data;
-		delete mHead;
+		delete iter.mNode->data;
+		delete iter.mNode;
+		iter.mNode = NULL; // Mark the iterator as invalid
 
-		// Update mHead and mSize
-		mHead = nextNode;
+		// Update mSize
 		mSize--;
 	}
 

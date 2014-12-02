@@ -374,22 +374,18 @@ private:
 	}
 
 	AVLNode binarySearch(const AVLNode node, const SearchType& searchKey) const {
+		if(IS_NULL(node)) {
+			throw ElementNotFoundException();
+		}
+
 		if(predKeyData(searchKey, node->data) == 0) {
 			return node;
 		}
 
 		if(predKeyData(searchKey, node->data) > 0) {
-			if(IS_NULL(node->right)) {
-				throw ElementNotFoundException();
-			} else {
-				return binarySearch(node->right, searchKey);
-			}
+			return binarySearch(node->right, searchKey);
 		} else {
-			if(IS_NULL(node->left)) {
-				throw ElementNotFoundException();
-			} else {
-				return binarySearch(node->left, searchKey);
-			}
+			return binarySearch(node->left, searchKey);
 		}
 	}
 

@@ -45,7 +45,7 @@ StatusType Statistics::AddVersion(int versionCode) {
 }
 
 StatusType Statistics::AddApplication(int appId, int versionCode, int downloadCount) {
-	if (appId <= 0 || versionCode <= 0) {
+	if (appId <= 0 || versionCode <= 0 || downloadCount < 0) {
 		return INVALID_INPUT;
 	}
 
@@ -313,8 +313,9 @@ StatusType Statistics::GetAllAppsByDownloads(int versionCode, int **apps, int *n
 		} catch (const InvalidVersionCodeException& e) {
 			return INVALID_INPUT;
 		} catch (const NoSuchVersionCodeException& e) {
-			// Return defaults for apps and numOfApps
-			return SUCCESS;
+			// versionCode is valid but doesn't exist in the system - return
+			// FAILURE, and default values for numOfApps and apps.
+			return FAILURE;
 		}
 	}
 
