@@ -52,7 +52,20 @@ public:
 		this->root = root;
 	}
 
-	virtual ~AVLTree() {};
+	virtual ~AVLTree() {
+		if (root) {
+			recursiveFree(root);
+		}
+	};
+
+	void recursiveFree(AVLNode node) {
+		if (!node) {
+			return;
+		}
+		recursiveFree(node->left);
+		recursiveFree(node->right);
+		delete node;
+	}
 
 	/**
 	 * Adds a new data element to the tree. A search key must also be provided to enable throwing an
@@ -152,7 +165,8 @@ public:
 
 	void printNodeStructure() {
 		AVLNode node = root->right; // CHANGE THIS TO SEE ANOTHER NODE
-		std::cout << "\n\nNode data: " << node->data << std::endl;
+		//std::cout << "\n\nNode data: " << node->data << std::endl;
+		std::cout << "\n\nNode data: <root>" << std::endl;
 		std::cout << "Left subtree: "; printInOrder(node->left); std::cout << std::endl;
 		std::cout << "Right subtree: "; printInOrder(node->right); std::cout << std::endl;
 	}
@@ -163,7 +177,7 @@ public:
 		}
 
 		printInOrder(node->left);
-		std::cout << node->data << ",";
+		std::cout << "<elem>" << ",";
 		printInOrder(node->right);
 	}
     */
@@ -287,16 +301,17 @@ private:
 			newNode->data = data;
 			return newNode;
 		}
+
 		// If there is another node with the same key, halt and throw an exception
-		else if(predKeyData(key, node->data) == 0) {
+		if(predKeyData(key, node->data) == 0) {
 			throw DuplicateNodeException();
 		}
+
 		// If the current node is considered greater than the data, continue on the left subtree
-		else if(predDataData(data, node->data) < 0) {
+		if(predDataData(data, node->data) < 0) {
 			node->left = recursiveInsert(node->left, key, data);
-		}
-		// If the current node is considered lower than the data, continue on the right subtree
-		else {
+		} else {
+			// If the current node is considered lower than the data, continue on the right subtree
 			node->right = recursiveInsert(node->right, key, data);
 		}
 

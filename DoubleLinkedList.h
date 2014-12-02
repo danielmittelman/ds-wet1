@@ -84,9 +84,9 @@ public:
 			return mNode->data;
 		}
 
+		Node* mNode;
 	private:
 		// Pointer to node. If mNode is NULL the iterator is considered invalid
-		Node* mNode;
 	};
 
 
@@ -98,12 +98,15 @@ public:
 	// Time complexity: O(k) where k is the list's length
 	virtual ~DoubleLinkedList() {
 		// Free all nodes
+		Node* nodeToDelete = NULL;
 		while (mHead) {
-			// Free data
-			delete mHead->data;
-			// Free the node struct itself
-			delete mHead;
+			nodeToDelete = mHead;
 			mHead = mHead->next;
+
+			// Free data
+			delete nodeToDelete->data;
+			// Free the node struct itself
+			delete nodeToDelete;
 		}
 	}
 
@@ -128,6 +131,9 @@ public:
 
 		// Insert the new node into the list and update mSize accordingly
 		mHead = node;
+		if (node->next != NULL) {
+			node->next->prev = node;
+		}
 		mSize++;
 
 		return Iterator(node);

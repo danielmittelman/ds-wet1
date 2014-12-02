@@ -21,6 +21,7 @@ const int INVALID_VERSION_TOP_APP_ID = -1;
 // Exception classes
 class InvalidVersionCodeException : public exception {};
 class VersionCodeNotLargerThanCurrentException : public exception {};
+class VersionCodeIsLastException : public exception {};
 class NoSuchVersionCodeException : public exception {};
 class NoSuchAppException : public exception {};
 class AppAlreadyExistsException : public exception {};
@@ -85,7 +86,7 @@ public:
 	// Throws NoSuchVersionCodeException if is no such versionCode in the list
 	// Throws NoSuchAppException if there are no apps with the given id in the
 	// version's versionAppsByDownloadCount tree
-	void removeApp(int versionCode, int appId);
+	void removeApp(int versionCode, int downloadCount, int appId);
 
 	// Finds a node with the given versionCode and returns the versionCode of
 	// the previous node in the list (the previous node since the list is

@@ -62,7 +62,7 @@ void OSVersionsList::addApp(const AppsListIterator& appDataPtr) {
 	}
 }
 
-void OSVersionsList::removeApp(int versionCode, int appId) {
+void OSVersionsList::removeApp(int versionCode, int downloadCount, int appId) {
 	// Search for the OSVersionData node with the relevant versionCode
 	// (an exception will be thrown if it is not found)
 	OSVersionData* data = getOSVersionDataByVersionCode(versionCode);
@@ -70,18 +70,25 @@ void OSVersionsList::removeApp(int versionCode, int appId) {
 	// Found our node, remove the app from the versionAppsByDownloadCount tree
 	// in it
 	try {
-		data->versionAppsByDownloadCount.removeApp(versionCode, appId);
+		data->versionAppsByDownloadCount.removeApp(downloadCount, appId);
 	} catch (const ElementNotFoundException& e) {
 		throw NoSuchAppException();
 	}
 
 	// App was successfully removed, don't forget to update
 	// versionTopAppId and versionTopAppDownloadCount if needed
-	AppsListIterator* newTopAppPtr = data->versionAppsByDownloadCount.getMax();
-	AppsListIterator newTopApp = *newTopAppPtr;
-	if (data->versionTopAppDownloadCount < newTopApp->downloadCount) {
-		data->versionTopAppDownloadCount = newTopApp->downloadCount;
-		data->versionTopAppId = newTopApp->appId;
+	try {
+		AppsListIterator* newTopAppPtr = data->versionAppsByDownloadCount.getMax();
+		AppsListIterator newTopApp = *newTopAppPtr;
+		if (data->versionTopAppDownloadCount < newTopApp->downloadCount) {
+			data->versionTopAppDownloadCount = newTopApp->downloadCount;
+			data->versionTopAppId = newTopApp->appId;
+		}
+	} catch (const ElementNotFoundException& e) {
+		// This happens when there are no elements in versionAppsByDownloadCount
+		// In this case update the versionTopApp to an invalid value
+		data->versionTopAppDownloadCount = -1;
+		data->versionTopAppId = INVALID_VERSION_TOP_APP_ID;
 	}
 }
 
@@ -96,6 +103,7 @@ int OSVersionsList::getFollowingVersion(int versionCode) const {
 	FilterByVersionCodePredicate predicate;
 
 	Node* p = mHead;
+
 	while (p) {
 		if (predicate(p->data, (void*) versionCode)) {
 			// Found it - Return the previous node's versionCode
@@ -103,8 +111,9 @@ int OSVersionsList::getFollowingVersion(int versionCode) const {
 				return p->prev->data->versionCode;
 			}
 
-			// The versionCode given is the largest one
-			throw NoSuchVersionCodeException();
+			// The versionCode given is the largest one, we cannot return
+			// the following version
+			throw VersionCodeIsLastException();
 		}
 
 		p = p->next;
@@ -116,7 +125,7 @@ int OSVersionsList::getFollowingVersion(int versionCode) const {
 
 AppsByDownloadCountTree* OSVersionsList::getAppsByDownloadCountTree(int versionCode) const {
 	// Search for the OSVersionData node with the relevant versionCode
-	// (an exception will be thrown if it is not found)
+			// the following version
 	OSVersionData* data = getOSVersionDataByVersionCode(versionCode);
 	return &(data->versionAppsByDownloadCount);
 }

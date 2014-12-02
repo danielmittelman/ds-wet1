@@ -37,7 +37,51 @@ public:
 
 	StatusType UpdateDownloads(int groupBase, int multiplyFactor);
 
+	/*
+	void printTreeDebugInfo1(AppsByIdTree* tree) {
+		// Enumerate the tree's data into an array
+		int treeSize = tree->getTreeSize();
+		AppsListIterator* appDataItersArray = new AppsListIterator[treeSize];
+		tree->enumerateData(appDataItersArray);
+		for (int i=0; i<treeSize; i++) {
+			std::cout << "\t[" << appDataItersArray[i]->appId << ":" << appDataItersArray[i]->downloadCount << "]" << std::endl;
+		}
+		delete[] appDataItersArray;
+	}
+	void printTreeDebugInfo2(AppsByDownloadCountTree* tree) {
+		// Enumerate the tree's data into an array
+		int treeSize = tree->getTreeSize();
+		AppsListIterator* appDataItersArray = new AppsListIterator[treeSize];
+		tree->enumerateData(appDataItersArray);
+		for (int i=0; i<treeSize; i++) {
+			std::cout << "\t[" << appDataItersArray[i]->appId << ":" << appDataItersArray[i]->downloadCount << "]" << std::endl;
+		}
+		delete[] appDataItersArray;
+	}
+	void printDebugInfo() {
+		std::cout << "************************************" << std::endl;
+		std::cout << "*** mAppsList size: " << mAppsList.getSize() << std::endl;
+		for (AppsList::Iterator it = mAppsList.begin();
+				it != mAppsList.end(); it++) {
+			std::cout << "\t***** " << it.mNode << " " << it.mNode->next << std::endl;
+			std::cout << "\t[" << it->appId << ":" << it->downloadCount << "]" << std::endl;
+		}
+		std::cout << "*** mOSVersionsList size: " << mOSVersionsList.getSize() << std::endl;
+		for (OSVersionsList::Iterator it = mOSVersionsList.begin();
+				it != mOSVersionsList.end(); it++) {
+			std::cout << "  Version " << it->versionCode << ":" << std::endl;
+			printTreeDebugInfo2(&(it->versionAppsByDownloadCount));
+		}
+		std::cout << "*** mAppsById (size " << mAppsById.getTreeSize() << "):" << std::endl;
+		printTreeDebugInfo1(&mAppsById);
+		std::cout << "*** mAppsByDownloadCount (size " << mAppsByDownloadCount.getTreeSize() << "):" << std::endl;
+		printTreeDebugInfo2(&mAppsByDownloadCount);
+		std::cout << "************************************" << std::endl;
+	}
+	*/
+
 private:
+
 	enum {
 		INVALID_TOP_APP_ID = -1
 	};
