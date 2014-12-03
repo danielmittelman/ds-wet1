@@ -154,42 +154,6 @@ public:
 	}
 
 
-
-	// THESE ARE METHODS FOR TESTING THE INTERNAL STRUCTURE OF THE TREE
-	// !!!!!!!!!!! REMOVE THESE BEFORE FINAL SUBMISSION !!!!!!!!!!!!!!!
-    /*
-	void printAllBFs() {
-		printBF(root);
-	}
-
-	void printBF(AVLNode node) {
-		if(!node) return;
-
-		printBF(node->left);
-		std::cout << getNodeBalanceFactor(node);
-		printBF(node->right);
-	}
-
-	void printNodeStructure() {
-		AVLNode node = root->right; // CHANGE THIS TO SEE ANOTHER NODE
-		//std::cout << "\n\nNode data: " << node->data << std::endl;
-		std::cout << "\n\nNode data: <root>" << std::endl;
-		std::cout << "Left subtree: "; printInOrder(node->left); std::cout << std::endl;
-		std::cout << "Right subtree: "; printInOrder(node->right); std::cout << std::endl;
-	}
-
-	void printInOrder(AVLNode node) {
-		if(IS_NULL(node)) {
-			return;
-		}
-
-		printInOrder(node->left);
-		std::cout << "<elem>" << ",";
-		printInOrder(node->right);
-	}
-    */
-	// !!!!!!!!!!!!!!!!!!!!!!!!!! END REMOVE !!!!!!!!!!!!!!!!!!!!!!!!!
-
 private:
 	AVLNode root;
 
