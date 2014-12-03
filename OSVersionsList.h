@@ -104,11 +104,17 @@ public:
 	// Throws NoSuchVersionCodeException if is no such versionCode in the list
 	AppsByDownloadCountTree* getAppsByDownloadCountTree(int versionCode) const;
 
+	// A public helper function for forcing update of a specific version's
+	// top app cache.
+	// Time complexity: O(log(n)) where n is the number of apps in the
+	// version's versionAppsByDownloadCount tree
+	void updateVersionTopApp(Iterator& iter);
+
 private:
 	// Helper function to get the OSVersionData of a specific versionCode
 	// Throws InvalidVersionCodeException if the given versionCode is <= 0
 	// Throws NoSuchVersionCodeException if is no such versionCode in the list
-	OSVersionData* getOSVersionDataByVersionCode(int versionCode) const;
+	Iterator getOSVersionDataByVersionCode(int versionCode) const;
 
 
 	// Predicate to be used with getDataByPredicate

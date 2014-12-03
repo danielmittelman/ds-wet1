@@ -225,19 +225,30 @@ public:
 	ValueType* getDataByPredicate(const Condition& condition,
 			void* extra) const {
 
+		return getIteratorByPredicate(condition, extra)->data;
+	}
+
+	// Get an iterator to the first node matching condition. The extra parameter
+	// is sent to condition on execution.
+	// (Condition should receive ValueType* and return true of false)
+	// Time complexity: O(k) where k is the list's length
+	// Throws NoSuchNodeException if no node matching the condition is found
+	template<typename Condition>
+	Iterator getIteratorByPredicate(const Condition& condition,
+			void* extra) const {
+
 		// Iterate over all nodes until one matches the condition
 		Node* p = mHead;
 		while (p) {
 			if (condition(p->data, extra)) {
 				// Found it !
-				return p->data;
+				return Iterator(p);
 			}
 			p = p->next;
 		}
 
 		throw NoSuchNodeException();
 	}
-
 
 protected:
 	Node* mHead;

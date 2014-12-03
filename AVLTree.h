@@ -132,7 +132,14 @@ public:
 	/**
 	 * Returns the total number of nodes in the tree
 	 */
-	const int getTreeSize() const {
+	bool isEmpty() const {
+		return IS_NULL(root);
+	}
+
+	/**
+	 * Returns the total number of nodes in the tree
+	 */
+	int getTreeSize() const {
 		return calculateTreeSize(0, root);
 	}
 

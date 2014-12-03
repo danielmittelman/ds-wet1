@@ -98,6 +98,10 @@ private:
 	// Helper function for updating downloads in an AppsByDownloadCountTree.
 	void doUpdateDownloadsInTree(AppsByDownloadCountTree* tree, int groupBase,
 			int multiplyFactor, bool shouldUpdateValues);
+
+	// Helper function for updating the top app cache after inserting, removing
+	// or otherwise updating the download count of apps.
+	void updateTopAppData();
 };
 
 #endif    /* _234218_WET1_STATISTICS_H_ */

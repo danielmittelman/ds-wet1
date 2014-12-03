@@ -82,11 +82,7 @@ StatusType Statistics::AddApplication(int appId, int versionCode, int downloadCo
 		}
 
 		// 4. Update mTopAppId and mTopAppDownloadCount if needed
-		if ( (mTopAppDownloadCount < downloadCount) ||
-			 (mTopAppDownloadCount == downloadCount && mTopAppId > appId) ) {
-			mTopAppDownloadCount = downloadCount;
-			mTopAppId = appId;
-		}
+		updateTopAppData();
 
 	} catch (const bad_alloc& e) {
 		return ALLOCATION_ERROR;
@@ -129,7 +125,8 @@ StatusType Statistics::RemoveApplication(int appId) {
 		mAppsById.removeApp(appId);
 
 		// Remove the app from the mAppsByDownloadCount tree
-		mAppsByDownloadCount.removeApp(appDataIter->downloadCount, appDataIter->appId);
+		mAppsByDownloadCount.removeApp(appDataIter->downloadCount,
+				appDataIter->appId);
 
 		// Remove the app from the mOSVersionsList data structure
 		mOSVersionsList.removeApp(appDataIter->versionCode,
@@ -143,19 +140,7 @@ StatusType Statistics::RemoveApplication(int appId) {
 	}
 
 	// Update mTopAppId and mTopAppDownloadCount if needed
-	try {
-		AppsListIterator* maxAppDataIterPtr = mAppsByDownloadCount.getMax();
-		AppsListIterator maxAppDataIter = *maxAppDataIterPtr;
-		if (mTopAppDownloadCount < maxAppDataIter->downloadCount) {
-			mTopAppDownloadCount = maxAppDataIter->downloadCount;
-			mTopAppId = maxAppDataIter->appId;
-		}
-	} catch (const ElementNotFoundException& e) {
-		// This happens when there are no elements in mAppsByDownloadCount
-		// In this case update the versionTopApp to an invalid value
-		mTopAppDownloadCount = -1;
-		mTopAppId = INVALID_TOP_APP_ID;
-	}
+	updateTopAppData();
 
 	return SUCCESS;
 }
@@ -193,6 +178,9 @@ StatusType Statistics::IncreaseDownloads(int appId, int downloadIncrease) {
 		// (so that it will be added to the correct new place)
 		mOSVersionsList.addApp(appDataIter);
 		mAppsByDownloadCount.addApp(appDataIter);
+
+		// Update mTopAppId and mTopAppDownloadCount if needed
+		updateTopAppData();
 
 	} catch (const bad_alloc& e) {
 		return ALLOCATION_ERROR;
@@ -379,14 +367,16 @@ StatusType Statistics::UpdateDownloads(int groupBase, int multiplyFactor) {
 		// Update the complete tree and actually modify the download counters
 		doUpdateDownloadsInTree(&(mAppsByDownloadCount), groupBase,
 				multiplyFactor, true);
+		// Update mTopAppId and mTopAppDownloadCount if needed
+		updateTopAppData();
 
 		// Update the k OSVersion trees, this time not updating the actual data
 		for (OSVersionsList::Iterator it = mOSVersionsList.begin();
 				it != mOSVersionsList.end(); it++) {
 
-			AppsByDownloadCountTree* tree =
-					mOSVersionsList.getAppsByDownloadCountTree(it->versionCode);
+			AppsByDownloadCountTree* tree = &(it->versionAppsByDownloadCount);
 			doUpdateDownloadsInTree(tree, groupBase, multiplyFactor, false);
+			mOSVersionsList.updateVersionTopApp(it);
 		}
 
 	} catch(std::bad_alloc& e) {
@@ -477,4 +467,21 @@ void Statistics::doUpdateDownloadsInTree(AppsByDownloadCountTree* tree,
 
 	// Make sure everything's deallocated
 	delete[] apps;
+}
+
+void Statistics::updateTopAppData() {
+	// Update mTopAppId and mTopAppDownloadCount if needed
+	try {
+		AppsListIterator* maxAppDataIterPtr = mAppsByDownloadCount.getMax();
+		AppsListIterator maxAppDataIter = *maxAppDataIterPtr;
+
+		mTopAppDownloadCount = maxAppDataIter->downloadCount;
+		mTopAppId = maxAppDataIter->appId;
+
+	} catch (const ElementNotFoundException& e) {
+		// This happens when there are no elements in mAppsByDownloadCount
+		// In this case update the versionTopApp to an invalid value
+		mTopAppDownloadCount = -1;
+		mTopAppId = INVALID_TOP_APP_ID;
+	}
 }
